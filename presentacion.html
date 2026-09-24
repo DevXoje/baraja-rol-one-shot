@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Baraja de rol one-shot — Presentación</title>
+<style>
+  :root {
+    --bg: #f6f7f9;
+    --surface: #ffffff;
+    --border: #e3e6ea;
+    --text: #1a1d21;
+    --text-2: #55595f;
+    --text-3: #8a8f96;
+    --accent: #2563eb;
+    --accent-soft: #dbeafe;
+    --warn: #d97706;
+    --warn-soft: #fef3c7;
+    --ok: #16a34a;
+    --ok-soft: #dcfce7;
+    --danger: #dc2626;
+    --danger-soft: #fee2e2;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.55;
+    font-size: 15px;
+  }
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  header .brand { font-weight: 700; font-size: 14px; }
+  header nav { display: flex; gap: 4px; flex-wrap: wrap; }
+  header nav a {
+    color: var(--text-2);
+    text-decoration: none;
+    font-size: 13px;
+    padding: 4px 10px;
+    border-radius: 6px;
+  }
+  header nav a:hover { background: var(--bg); color: var(--text); }
+  main { max-width: 1080px; margin: 0 auto; padding: 32px 24px 80px; }
+  section { margin-top: 48px; }
+  h1 { font-size: 28px; letter-spacing: -0.02em; margin-bottom: 8px; }
+  h2 { font-size: 20px; letter-spacing: -0.01em; margin-bottom: 6px; }
+  .lead { color: var(--text-2); max-width: 760px; }
+  .hint { color: var(--text-3); font-size: 13px; margin-top: 6px; }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+    margin-top: 24px;
+  }
+  .stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+  }
+  .stat .value { font-size: 30px; font-weight: 700; letter-spacing: -0.02em; }
+  .stat .value.blue { color: var(--accent); }
+  .stat .value.amber { color: var(--warn); }
+  .stat .label { color: var(--text-3); font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+  @media (max-width: 860px) { .grid-2 { grid-template-columns: 1fr; } }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+  }
+  .panel h3 { font-size: 14px; margin-bottom: 12px; color: var(--text-2); font-weight: 600; }
+  .panel .caption { font-size: 13px; color: var(--text-3); margin-top: 12px; }
+
+  .formula {
+    background: var(--accent-soft);
+    border: 1px solid #bfdbfe;
+    border-radius: 10px;
+    padding: 16px 18px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-top: 16px;
+    font-weight: 500;
+  }
+  .chip {
+    display: inline-block;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 3px 12px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .chip.blue { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .chip.green { background: var(--ok); border-color: var(--ok); color: #fff; }
+
+  .callout {
+    margin-top: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--accent);
+    border-radius: 8px;
+    padding: 14px 18px;
+  }
+  .callout strong { display: block; margin-bottom: 4px; color: var(--accent); font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; }
+
+  .table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+    margin-top: 16px;
+  }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+  th {
+    text-align: left;
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-3);
+    background: var(--bg);
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+  }
+  td { padding: 9px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  tbody tr:nth-child(even) td { background: #fafbfc; }
+  td.num, th.num { text-align: center; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  td.total { font-weight: 700; background: var(--bg) !important; }
+  tr.row-danger td { background: var(--danger-soft) !important; }
+
+  .tag {
+    display: inline-block;
+    border-radius: 999px;
+    padding: 2px 10px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .tag.ok { background: var(--ok-soft); color: var(--ok); }
+  .tag.bad { background: var(--danger-soft); color: var(--danger); }
+  .tag.warn { background: var(--warn-soft); color: var(--warn); }
+  .tag.info { background: var(--accent-soft); color: var(--accent); }
+
+  .bars { display: flex; flex-direction: column; gap: 9px; }
+  .bar-row { display: grid; grid-template-columns: 110px 1fr 46px; align-items: center; gap: 10px; font-size: 13px; }
+  .bar-row .name { color: var(--text-2); text-align: right; }
+  .bar-row .val { color: var(--text-3); font-variant-numeric: tabular-nums; font-size: 12px; }
+  .track { background: var(--bg); border-radius: 4px; height: 18px; overflow: hidden; display: flex; }
+  .fill { height: 100%; background: var(--accent); }
+  .fill.warn { background: var(--warn); }
+  .fill.hero { background: var(--warn); }
+  .fill .seg2 { height: 100%; background: var(--warn); }
+
+  .legend { display: flex; gap: 16px; font-size: 12.5px; color: var(--text-2); margin-top: 4px; }
+  .legend span::before {
+    content: "";
+    display: inline-block;
+    width: 10px; height: 10px;
+    border-radius: 3px;
+    margin-right: 6px;
+    vertical-align: baseline;
+  }
+  .legend .l1::before { background: var(--accent); }
+  .legend .l2::before { background: var(--warn); }
+
+  .donut-wrap { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+  .donut-legend { display: flex; flex-direction: column; gap: 8px; font-size: 13px; color: var(--text-2); }
+  .donut-legend .row { display: flex; align-items: center; gap: 8px; }
+  .dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+
+  .siglas { display: flex; flex-direction: column; gap: 8px; font-size: 13.5px; color: var(--text-2); }
+  .siglas b { color: var(--text); }
+
+  .steps { list-style: none; counter-reset: step; display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+  .steps li {
+    counter-increment: step;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px 12px 52px;
+    position: relative;
+    color: var(--text-2);
+  }
+  .steps li::before {
+    content: counter(step);
+    position: absolute;
+    left: 14px; top: 12px;
+    width: 24px; height: 24px;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .steps li b { color: var(--text); }
+
+  footer { margin-top: 56px; padding-top: 16px; border-top: 1px solid var(--border); color: var(--text-3); font-size: 12.5px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">Baraja de rol one-shot</div>
+  <nav>
+    <a href="#jugada">Cómo se juega</a>
+    <a href="#baraja">La baraja</a>
+    <a href="#arquetipos">Arquetipos</a>
+    <a href="#criaturas">Criaturas</a>
+    <a href="#amenazas">Amenazas</a>
+    <a href="#escena">Ejemplo de escena</a>
+    <a href="#muestras">Muestras</a>
+  </nav>
+</header>
+
+<main>
+
+  <section id="inicio" style="margin-top: 8px;">
+    <h1>Baraja de cartas para rol one-shot</h1>
+    <p class="lead">
+      Las cartas representan la ficha de personaje (cartas de jugador) y el escenario, mapa, lugares
+      y criaturas (cartas de mundo). Los jugadores describen lo que quieren hacer, el master fija la
+      dificultad, y se resuelve con un <b>d20</b> más los bonificadores de las cartas relevantes.
+    </p>
+    <div class="stats">
+      <div class="stat"><div class="value">192</div><div class="label">Cartas en total</div></div>
+      <div class="stat"><div class="value">11</div><div class="label">Tipos de carta</div></div>
+      <div class="stat"><div class="value blue">129</div><div class="label">Cartas de personaje</div></div>
+      <div class="stat"><div class="value amber">63</div><div class="label">Cartas de mundo</div></div>
+    </div>
+  </section>
+
+  <section id="jugada">
+    <h2>Cómo se juega</h2>
+    <p class="lead">El master decide la dificultad y qué resulta relevante para la situación. Solo entonces se tira el d20 y se suman las cartas del jugador que encajan con la acción.</p>
+
+    <div class="formula">
+      <span>Tirada =</span>
+      <span class="chip blue">d20</span>
+      <span>+</span>
+      <span class="chip">estadística base (Arquetipo)</span>
+      <span>+</span>
+      <span class="chip">bonificadores relevantes (Raza · Profesión · Rasgo · Objeto)</span>
+      <span>vs</span>
+      <span class="chip green">Dificultad del master</span>
+    </div>
+
+    <div class="callout">
+      <strong>Regla clave</strong>
+      El Arquetipo es la única carta que define las estadísticas base del personaje (FUE, AGI, INT, VOL, PRE).
+      Todas las demás cartas solo aportan bonificadores puntuales cuando el master los considera relevantes.
+    </div>
+
+    <div class="grid-2" style="margin-top: 20px;">
+      <div class="panel">
+        <h3>Ejemplo de tirada resuelta</h3>
+        <div class="table-wrap" style="margin-top: 0;">
+          <table>
+            <thead>
+              <tr><th>Componente</th><th class="num">A: atacar con espada</th><th class="num">B: engañar a la guardia</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Dificultad del master</td><td class="num">15</td><td class="num">14</td></tr>
+              <tr><td>d20</td><td class="num">12</td><td class="num">9</td></tr>
+              <tr><td>Estadística (Duelista)</td><td class="num">AGI +3</td><td class="num">PRE -1</td></tr>
+              <tr><td>Rasgo Espadachín</td><td class="num">+2</td><td class="num">sin aplicar</td></tr>
+              <tr><td>Profesión Guerrero</td><td class="num">+2</td><td class="num">sin aplicar</td></tr>
+              <tr class="total"><td>Total</td><td class="num">19</td><td class="num">8</td></tr>
+              <tr><td>Resultado</td><td class="num"><span class="tag ok">Éxito</span></td><td class="num"><span class="tag bad">Fracaso</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="caption">En la tirada B el master descartó Espadachín y Guerrero: mentir a un guardia no usa espada ni tácticas militares, así que el personaje quedó casi sin bonificadores.</p>
+      </div>
+
+      <div class="panel">
+        <h3>Cómo el master construye una tirada</h3>
+        <ol class="steps">
+          <li>El jugador describe la acción: <b>«Corto al bandido con mi espada»</b>.</li>
+          <li>El master elige estadística y dificultad: <b>AGI, dificultad 15</b>.</li>
+          <li>Se descartan cartas no relevantes: <b>trasfondo, ambición, raza</b> no aplican aquí.</li>
+          <li>Se suman las relevantes: <b>arquetipo + rasgo + profesión</b>.</li>
+          <li>Se compara el total con la dificultad y se narra el resultado.</li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <section id="baraja">
+    <h2>Composición de la baraja</h2>
+    <p class="lead">Reparto de las 192 cartas entre personaje y mundo, y cantidad de cartas por tipo.</p>
+
+    <div class="grid-2" style="margin-top: 16px;">
+      <div class="panel">
+        <h3>Personaje vs mundo</h3>
+        <div class="donut-wrap">
+          <svg width="180" height="180" viewBox="0 0 180 180" role="img" aria-label="129 cartas de personaje y 63 de mundo">
+            <g transform="rotate(-90 90 90)">
+              <circle cx="90" cy="90" r="70" fill="none" stroke="#2563eb" stroke-width="26"
+                      stroke-dasharray="295.5 439.8" />
+              <circle cx="90" cy="90" r="70" fill="none" stroke="#d97706" stroke-width="26"
+                      stroke-dasharray="144.3 439.8" stroke-dashoffset="-295.5" />
+            </g>
+            <text x="90" y="85" text-anchor="middle" font-size="26" font-weight="700" fill="#1a1d21">192</text>
+            <text x="90" y="105" text-anchor="middle" font-size="11" fill="#8a8f96">CARTAS</text>
+          </svg>
+          <div class="donut-legend">
+            <div class="row"><span class="dot" style="background:#2563eb"></span> Personaje — 129 (67%)</div>
+            <div class="row"><span class="dot" style="background:#d97706"></span> Mundo — 63 (33%)</div>
+          </div>
+        </div>
+        <p class="caption">Dos tercios de la baraja construyen al personaje; el resto, la partida.</p>
+      </div>
+
+      <div class="panel">
+        <h3>Cartas por tipo</h3>
+        <div class="bars">
+          <div class="bar-row"><span class="name">Rasgos</span><div class="track"><div class="fill" style="width:100%"></div></div><span class="val">29</span></div>
+          <div class="bar-row"><span class="name">Ambiciones</span><div class="track"><div class="fill" style="width:82.8%"></div></div><span class="val">24</span></div>
+          <div class="bar-row"><span class="name">Profesiones</span><div class="track"><div class="fill" style="width:79.3%"></div></div><span class="val">23</span></div>
+          <div class="bar-row"><span class="name">Arquetipos</span><div class="track"><div class="fill" style="width:79.3%"></div></div><span class="val">23</span></div>
+          <div class="bar-row"><span class="name">Trasfondos</span><div class="track"><div class="fill" style="width:69%"></div></div><span class="val">20</span></div>
+          <div class="bar-row"><span class="name">Lugares</span><div class="track"><div class="fill seg2" style="width:62.1%"></div></div><span class="val">18</span></div>
+          <div class="bar-row"><span class="name">Objetos</span><div class="track"><div class="fill seg2" style="width:55.2%"></div></div><span class="val">16</span></div>
+          <div class="bar-row"><span class="name">Criaturas</span><div class="track"><div class="fill seg2" style="width:44.8%"></div></div><span class="val">13</span></div>
+          <div class="bar-row"><span class="name">Razas</span><div class="track"><div class="fill" style="width:34.5%"></div></div><span class="val">10</span></div>
+          <div class="bar-row"><span class="name">Regiones</span><div class="track"><div class="fill seg2" style="width:34.5%"></div></div><span class="val">10</span></div>
+          <div class="bar-row"><span class="name">Amenazas</span><div class="track"><div class="fill seg2" style="width:20.7%"></div></div><span class="val">6</span></div>
+        </div>
+        <div class="legend" style="margin-top:12px;">
+          <span class="l1">Personaje</span>
+          <span class="l2">Mundo</span>
+        </div>
+        <p class="caption">Los Rasgos (29) y las Ambiciones (24) dan profundidad al personaje. Las Amenazas (6) son pocas a propósito: son tensión que se repite y escala durante la partida.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="arquetipos">
+    <h2>Arquetipos: las estadísticas base</h2>
+    <p class="lead">23 arquetipos. Cada uno destaca en una estadística (+3) y paga en otra: la creación de personaje es una elección de especialización, no un balance neutro.</p>
+
+    <div class="grid-2" style="margin-top: 16px;">
+      <div class="panel">
+        <h3>Stat dominante del arquetipo (+3)</h3>
+        <div class="donut-wrap">
+          <svg width="180" height="180" viewBox="0 0 180 180" role="img" aria-label="Distribución de estadística dominante">
+            <g transform="rotate(-90 90 90)">
+              <circle cx="90" cy="90" r="70" fill="none" stroke="#1d4ed8" stroke-width="26" stroke-dasharray="133.9 439.8" />
+              <circle cx="90" cy="90" r="70" fill="none" stroke="#2563eb" stroke-width="26" stroke-dasharray="114.7 439.8" stroke-dashoffset="-133.9" />
+              <circle cx="90" cy="90" r="70" fill="none" stroke="#3b82f6" stroke-width="26" stroke-dasharray="95.6 439.8" stroke-dashoffset="-248.6" />
+              <circle cx="90" cy="90" r="70" fill="none" stroke="#60a5fa" stroke-width="26" stroke-dasharray="57.3 439.8" stroke-dashoffset="-344.2" />
+              <circle cx="90" cy="90" r="70" fill="none" stroke="#93c5fd" stroke-width="26" stroke-dasharray="38.3 439.8" stroke-dashoffset="-401.5" />
+            </g>
+            <text x="90" y="85" text-anchor="middle" font-size="26" font-weight="700" fill="#1a1d21">23</text>
+            <text x="90" y="105" text-anchor="middle" font-size="11" fill="#8a8f96">ARQUETIPOS</text>
+          </svg>
+          <div class="donut-legend">
+            <div class="row"><span class="dot" style="background:#1d4ed8"></span> INT — 7</div>
+            <div class="row"><span class="dot" style="background:#2563eb"></span> FUE — 6</div>
+            <div class="row"><span class="dot" style="background:#3b82f6"></span> AGI — 5</div>
+            <div class="row"><span class="dot" style="background:#60a5fa"></span> PRE — 3</div>
+            <div class="row"><span class="dot" style="background:#93c5fd"></span> VOL — 2</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>Lectura de las siglas</h3>
+        <div class="siglas">
+          <div><b>FUE</b> — Fuerza: potencia física</div>
+          <div><b>AGI</b> — Agilidad: movimiento y coordinación</div>
+          <div><b>INT</b> — Inteligencia: conocimiento y análisis</div>
+          <div><b>VOL</b> — Voluntad: resistencia mental</div>
+          <div><b>PRE</b> — Presencia: carisma y autoridad</div>
+        </div>
+        <p class="caption">El intelecto es la especialización más común (7 de 23), seguida de la fuerza (6). La voluntad casi nunca es estadística principal: aparece como refuerzo en místicos y ascetas.</p>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Arquetipo</th><th class="num">FUE</th><th class="num">AGI</th><th class="num">INT</th><th class="num">VOL</th><th class="num">PRE</th><th>Concepto</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Fortachón</td><td class="num">+3</td><td class="num">+1</td><td class="num">-1</td><td class="num">+0</td><td class="num">+2</td><td>Fuerza física y presencia</td></tr>
+          <tr><td>Bruto</td><td class="num">+3</td><td class="num">+0</td><td class="num">-1</td><td class="num">+2</td><td class="num">+1</td><td>Potencia y resistencia</td></tr>
+          <tr><td>Atleta</td><td class="num">+3</td><td class="num">+2</td><td class="num">+0</td><td class="num">-1</td><td class="num">+1</td><td>Físico excepcional</td></tr>
+          <tr><td>Coloso</td><td class="num">+3</td><td class="num">-1</td><td class="num">+0</td><td class="num">+2</td><td class="num">+1</td><td>Fuerza y voluntad</td></tr>
+          <tr><td>Matón</td><td class="num">+3</td><td class="num">+1</td><td class="num">-1</td><td class="num">+2</td><td class="num">+0</td><td>Fuerza e intimidación</td></tr>
+          <tr><td>Acróbata</td><td class="num">+1</td><td class="num">+3</td><td class="num">+2</td><td class="num">-1</td><td class="num">+0</td><td>Movimiento y coordinación</td></tr>
+          <tr><td>Explorador</td><td class="num">+1</td><td class="num">+3</td><td class="num">+2</td><td class="num">+0</td><td class="num">-1</td><td>Agilidad y percepción</td></tr>
+          <tr><td>Duelista</td><td class="num">+2</td><td class="num">+3</td><td class="num">+0</td><td class="num">+1</td><td class="num">-1</td><td>Combate técnico</td></tr>
+          <tr><td>Superviviente</td><td class="num">+2</td><td class="num">+3</td><td class="num">-1</td><td class="num">+1</td><td class="num">+0</td><td>Adaptabilidad física</td></tr>
+          <tr><td>Erudito</td><td class="num">-1</td><td class="num">+0</td><td class="num">+3</td><td class="num">+2</td><td class="num">+1</td><td>Conocimiento y voluntad</td></tr>
+          <tr><td>Intelectual</td><td class="num">+0</td><td class="num">+1</td><td class="num">+3</td><td class="num">-1</td><td class="num">+2</td><td>Mente y persuasión</td></tr>
+          <tr><td>Investigador</td><td class="num">+1</td><td class="num">+2</td><td class="num">+3</td><td class="num">-1</td><td class="num">+0</td><td>Observación y análisis</td></tr>
+          <tr><td>Estratega</td><td class="num">+1</td><td class="num">-1</td><td class="num">+3</td><td class="num">+2</td><td class="num">+0</td><td>Planificación y disciplina</td></tr>
+          <tr><td>Sabio</td><td class="num">-1</td><td class="num">+0</td><td class="num">+3</td><td class="num">+1</td><td class="num">+2</td><td>Conocimiento y comprensión</td></tr>
+          <tr><td>Místico</td><td class="num">+0</td><td class="num">-1</td><td class="num">+2</td><td class="num">+3</td><td class="num">+1</td><td>Poder interior</td></tr>
+          <tr><td>Asceta</td><td class="num">+1</td><td class="num">+0</td><td class="num">+2</td><td class="num">+3</td><td class="num">-1</td><td>Disciplina y concentración</td></tr>
+          <tr><td>Líder</td><td class="num">+1</td><td class="num">+0</td><td class="num">+2</td><td class="num">-1</td><td class="num">+3</td><td>Mente y autoridad</td></tr>
+          <tr><td>Manipulador</td><td class="num">-1</td><td class="num">+1</td><td class="num">+2</td><td class="num">+0</td><td class="num">+3</td><td>Engaño e influencia</td></tr>
+          <tr><td>Titán</td><td class="num">+3</td><td class="num">+1</td><td class="num">-2</td><td class="num">+3</td><td class="num">+0</td><td>Fuerza y voluntad</td></tr>
+          <tr><td>Pícaro</td><td class="num">+0</td><td class="num">+3</td><td class="num">+2</td><td class="num">-1</td><td class="num">+1</td><td>Astucia y agilidad</td></tr>
+          <tr><td>Genio</td><td class="num">-2</td><td class="num">+1</td><td class="num">+3</td><td class="num">+2</td><td class="num">+1</td><td>Intelecto extraordinario</td></tr>
+          <tr><td>Carismático</td><td class="num">-1</td><td class="num">+0</td><td class="num">+1</td><td class="num">+2</td><td class="num">+3</td><td>Presencia y personalidad</td></tr>
+          <tr><td>Visionario</td><td class="num">+0</td><td class="num">+1</td><td class="num">+3</td><td class="num">+2</td><td class="num">+2</td><td>Ideas y determinación</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="criaturas">
+    <h2>Criaturas: plantillas del mundo</h2>
+    <p class="lead">
+      Cada criatura trae sus cinco estadísticas, una frase temática para interpretarla y sus aptitudes.
+      El Dragón es el techo de la escala: su suma total (17) triplica a la de un Campesino (2).
+    </p>
+
+    <div class="panel" style="margin-top: 16px;">
+      <h3>Poder total (suma de las cinco estadísticas)</h3>
+      <div class="bars">
+        <div class="bar-row"><span class="name">Dragón</span><div class="track"><div class="fill hero" style="width:100%"></div></div><span class="val">17</span></div>
+        <div class="bar-row"><span class="name">Caballero</span><div class="track"><div class="fill" style="width:41.2%"></div></div><span class="val">7</span></div>
+        <div class="bar-row"><span class="name">Rey</span><div class="track"><div class="fill" style="width:41.2%"></div></div><span class="val">7</span></div>
+        <div class="bar-row"><span class="name">Noble</span><div class="track"><div class="fill" style="width:35.3%"></div></div><span class="val">6</span></div>
+        <div class="bar-row"><span class="name">Bruja</span><div class="track"><div class="fill" style="width:35.3%"></div></div><span class="val">6</span></div>
+        <div class="bar-row"><span class="name">Sacerdote</span><div class="track"><div class="fill" style="width:29.4%"></div></div><span class="val">5</span></div>
+        <div class="bar-row"><span class="name">Mercenario</span><div class="track"><div class="fill" style="width:29.4%"></div></div><span class="val">5</span></div>
+        <div class="bar-row"><span class="name">Guardia</span><div class="track"><div class="fill" style="width:23.5%"></div></div><span class="val">4</span></div>
+        <div class="bar-row"><span class="name">Mercader</span><div class="track"><div class="fill" style="width:23.5%"></div></div><span class="val">4</span></div>
+        <div class="bar-row"><span class="name">Bandido</span><div class="track"><div class="fill" style="width:23.5%"></div></div><span class="val">4</span></div>
+        <div class="bar-row"><span class="name">Lobo</span><div class="track"><div class="fill" style="width:17.6%"></div></div><span class="val">3</span></div>
+        <div class="bar-row"><span class="name">Campesino</span><div class="track"><div class="fill" style="width:11.8%"></div></div><span class="val">2</span></div>
+        <div class="bar-row"><span class="name">Goblin</span><div class="track"><div class="fill" style="width:5.9%"></div></div><span class="val">1</span></div>
+      </div>
+      <p class="caption">El Dragón no es un enemigo al mismo nivel: es un evento. El resto se agrupa entre 1 y 7, pensado para encuentros frontales de una sesión.</p>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Criatura</th><th class="num">FUE</th><th class="num">AGI</th><th class="num">INT</th><th class="num">VOL</th><th class="num">PRE</th><th>Frase</th><th>Aptitudes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Campesino</td><td class="num">+1</td><td class="num">+1</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td>“Tendría más fuerza si comiese mejor.”</td><td>agricultura, animales, trabajo físico, conocimiento local</td></tr>
+          <tr><td>Guardia</td><td class="num">+1</td><td class="num">+1</td><td class="num">0</td><td class="num">+1</td><td class="num">+1</td><td>“Vas a tener que acompañarme.”</td><td>combate, vigilancia, autoridad</td></tr>
+          <tr><td>Mercader</td><td class="num">0</td><td class="num">0</td><td class="num">+1</td><td class="num">+1</td><td class="num">+2</td><td>“Todo tiene un precio.”</td><td>comercio, negociación, valorar objetos</td></tr>
+          <tr><td>Bandido</td><td class="num">+1</td><td class="num">+2</td><td class="num">0</td><td class="num">+1</td><td class="num">0</td><td>“Dame la bolsa y nadie saldrá herido.”</td><td>emboscadas, intimidación, supervivencia</td></tr>
+          <tr><td>Goblin</td><td class="num">-1</td><td class="num">+2</td><td class="num">0</td><td class="num">+1</td><td class="num">-1</td><td>“¡Son muchos! ¡Corred!”</td><td>esconderse, emboscar, improvisar trampas</td></tr>
+          <tr><td>Lobo</td><td class="num">+1</td><td class="num">+2</td><td class="num">-1</td><td class="num">+1</td><td class="num">0</td><td>“No está solo.”</td><td>rastrear, perseguir, atacar en grupo</td></tr>
+          <tr><td>Caballero</td><td class="num">+2</td><td class="num">+1</td><td class="num">+1</td><td class="num">+2</td><td class="num">+1</td><td>“Por mi honor.”</td><td>combate, etiqueta, disciplina</td></tr>
+          <tr><td>Noble</td><td class="num">0</td><td class="num">0</td><td class="num">+2</td><td class="num">+1</td><td class="num">+3</td><td>“¿Sabes con quién estás hablando?”</td><td>política, etiqueta, riqueza, contactos</td></tr>
+          <tr><td>Sacerdote</td><td class="num">0</td><td class="num">0</td><td class="num">+2</td><td class="num">+2</td><td class="num">+1</td><td>“Hay cosas que no deberías invocar.”</td><td>religión, rituales, historia</td></tr>
+          <tr><td>Mercenario</td><td class="num">+2</td><td class="num">+2</td><td class="num">0</td><td class="num">+1</td><td class="num">0</td><td>“Me pagan por estar aquí.”</td><td>combate, armas, tácticas</td></tr>
+          <tr><td>Bruja</td><td class="num">-1</td><td class="num">+1</td><td class="num">+2</td><td class="num">+3</td><td class="num">+1</td><td>“Todo precio acaba pagándose.”</td><td>magia, pociones, maldiciones, conocimiento oculto</td></tr>
+          <tr><td>Rey</td><td class="num">0</td><td class="num">-1</td><td class="num">+2</td><td class="num">+3</td><td class="num">+3</td><td>“Todo esto me pertenece.”</td><td>autoridad, política, riqueza, ejército</td></tr>
+          <tr><td>Dragón</td><td class="num">+5</td><td class="num">+2</td><td class="num">+3</td><td class="num">+4</td><td class="num">+3</td><td>“Los mortales siempre acaban olvidando quién manda.”</td><td>vuelo, fuego, tesoros, conocimiento antiguo</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="amenazas">
+    <h2>Amenazas crecientes</h2>
+    <p class="lead">
+      Peligros que avanzan turno a turno mediante un contador. Cuando llega al máximo, la amenaza
+      estalla. El master puede llevar la cuenta con marcadores o con un dado.
+    </p>
+
+    <div class="grid-2" style="margin-top: 16px;">
+      <div class="panel">
+        <h3>Turnos hasta el estallido</h3>
+        <div class="bars">
+          <div class="bar-row"><span class="name">Guardia</span><div class="track"><div class="fill warn" style="width:60%"></div></div><span class="val">6</span></div>
+          <div class="bar-row"><span class="name">Ritual</span><div class="track"><div class="fill warn" style="width:80%"></div></div><span class="val">8</span></div>
+          <div class="bar-row"><span class="name">Monstruo</span><div class="track"><div class="fill warn" style="width:100%"></div></div><span class="val">10</span></div>
+          <div class="bar-row"><span class="name">Pánico</span><div class="track"><div class="fill warn" style="width:60%"></div></div><span class="val">6</span></div>
+          <div class="bar-row"><span class="name">Barco</span><div class="track"><div class="fill warn" style="width:60%"></div></div><span class="val">6</span></div>
+          <div class="bar-row"><span class="name">Ejército</span><div class="track"><div class="fill warn" style="width:80%"></div></div><span class="val">8</span></div>
+        </div>
+        <p class="caption">El monstruo despierta da 10 turnos: es la amenaza de partida larga. La guardia y el barco aprietan antes.</p>
+      </div>
+
+      <div class="panel">
+        <h3>Fichas</h3>
+        <div class="table-wrap" style="margin-top:0; border:none;">
+          <table>
+            <thead><tr><th>Amenaza</th><th class="num">Contador</th><th>Frase</th></tr></thead>
+            <tbody>
+              <tr><td>La Guardia se acerca</td><td class="num">0/6</td><td>“Cada vez hay más ojos buscándote.”</td></tr>
+              <tr><td>El ritual comienza</td><td class="num">0/8</td><td>“Las velas se encienden una a una.”</td></tr>
+              <tr class="row-danger"><td>El monstruo despierta</td><td class="num">0/10</td><td>“Algo enorme se está moviendo bajo tierra.”</td></tr>
+              <tr><td>La ciudad entra en pánico</td><td class="num">0/6</td><td>“La gente empieza a correr.”</td></tr>
+              <tr><td>El barco se hunde</td><td class="num">0/6</td><td>“El agua ya llega a cubierta.”</td></tr>
+              <tr><td>El ejército marcha</td><td class="num">0/8</td><td>“Todavía está lejos. Pero cada vez se escucha con mayor”</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="escena">
+    <h2>Ejemplo de escena completa: la taberna del puerto</h2>
+    <p class="lead">
+      El master construye la escena combinando cartas de mundo: dentro de la región <b>Ciudad</b> sitúa
+      la <b>Taberna</b>. Los jugadores piden rumores, pero un <b>Bandido</b> los sigue y la amenaza de
+      la guardia avanza un punto cada vez que se demoran. Como recompensa, el tabernero vende un mapa
+      con partes misteriosamente tachadas.
+    </p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Carta</th><th>Tipo</th><th>Rol en la escena</th><th>Detalle</th></tr></thead>
+        <tbody>
+          <tr><td>Ciudad</td><td><span class="tag info">Región</span></td><td>Marco de la escena</td><td>Comercio, guardia y oportunidades</td></tr>
+          <tr><td>Taberna</td><td><span class="tag info">Lugar</span></td><td>Reunión, rumores y descanso</td><td>El dueño sabe más de lo que aparenta</td></tr>
+          <tr><td>Bandido</td><td><span class="tag warn">Criatura</span></td><td>Antagonista</td><td>FUE +1 · AGI +2 · “Dame la bolsa…”</td></tr>
+          <tr><td>Mapa incompleto</td><td><span class="tag info">Objeto</span></td><td>Recompensa y gancho</td><td>Hay partes deliberadamente tachadas</td></tr>
+          <tr><td>La Guardia se acerca</td><td><span class="tag bad">Amenaza</span></td><td>Presión temporal</td><td>Contador 0/6</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="muestras">
+    <h2>Una carta de cada tipo</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Tipo</th><th>Carta</th><th>Efecto o descripción</th></tr></thead>
+        <tbody>
+          <tr><td><span class="tag info">Raza</span></td><td>Elfo</td><td>+1 a tiradas de sentidos; ve ligeramente en la oscuridad</td></tr>
+          <tr><td><span class="tag info">Profesión</span></td><td>Médico</td><td>+2 a diagnosticar enfermedades y tratar heridas</td></tr>
+          <tr><td><span class="tag info">Rasgo</span></td><td>Suerte</td><td>Una vez por partida, repetir una tirada fallida</td></tr>
+          <tr><td><span class="tag info">Trasfondo</span></td><td>Superviviente de naufragio</td><td>Perdiste todo en el mar y todavía recuerdas aquella noche</td></tr>
+          <tr><td><span class="tag info">Ambición</span></td><td>Venganza</td><td>Alguien te hizo daño. A ti o a alguien cercano. Y deben pagar</td></tr>
+          <tr><td><span class="tag info">Arquetipo</span></td><td>Duelista</td><td>AGI +3, combate técnico</td></tr>
+          <tr><td><span class="tag warn">Región</span></td><td>Ruinas antiguas</td><td>Restos de una civilización desaparecida</td></tr>
+          <tr><td><span class="tag warn">Lugar</span></td><td>Biblioteca</td><td>Libros, mapas y conocimientos olvidados</td></tr>
+          <tr><td><span class="tag warn">Criatura</span></td><td>Bruja</td><td>VOL +3 · “Todo precio acaba pagándose”</td></tr>
+          <tr><td><span class="tag warn">Objeto</span></td><td>Poción de fuerza</td><td>Durante una escena, +2 FUE</td></tr>
+          <tr><td><span class="tag bad">Amenaza</span></td><td>El monstruo despierta</td><td>Contador 0/10 · “Algo enorme se mueve bajo tierra”</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>
+    <span>Contenido extraído de cartas/ — reglas.md, personaje/*, mundo/*</span>
+    <span>129 cartas de personaje · 63 cartas de mundo · 192 en total</span>
+  </footer>
+
+</main>
+</body>
+</html>

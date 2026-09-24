@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Baraja de rol one-shot — Prueba de concepto</title>
+<style>
+  :root {
+    --bg: #f6f7f9;
+    --surface: #ffffff;
+    --border: #e3e6ea;
+    --text: #1a1d21;
+    --text-2: #55595f;
+    --text-3: #8a8f96;
+    --accent: #2563eb;
+    --accent-soft: #dbeafe;
+    --warn: #d97706;
+    --warn-soft: #fef3c7;
+    --ok: #16a34a;
+    --ok-soft: #dcfce7;
+    --danger: #dc2626;
+    --danger-soft: #fee2e2;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    font-size: 14.5px;
+  }
+  button { font: inherit; cursor: pointer; }
+  select, input, textarea { font: inherit; color: inherit; }
+
+  .topbar {
+    position: sticky; top: 0; z-index: 20;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 20px;
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  }
+  .topbar .brand { font-weight: 700; font-size: 14px; }
+  .topbar .who { color: var(--text-2); font-size: 13px; }
+  .topbar .spacer { flex: 1; }
+
+  main { max-width: 1180px; margin: 0 auto; padding: 24px 20px 80px; }
+  .view { display: none; }
+  .view.active { display: block; }
+
+  h1 { font-size: 24px; letter-spacing: -0.02em; }
+  h2 { font-size: 16px; letter-spacing: -0.01em; }
+  h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-3); margin-bottom: 10px; }
+  .lead { color: var(--text-2); max-width: 720px; margin-top: 6px; }
+  .muted { color: var(--text-3); font-size: 12.5px; }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+  }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+  .grid-game { display: grid; grid-template-columns: 1.15fr 1fr; gap: 16px; align-items: start; margin-top: 18px; }
+  .col { display: flex; flex-direction: column; gap: 16px; }
+  @media (max-width: 900px) { .grid2, .grid-game { grid-template-columns: 1fr; } }
+
+  .btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .btn:hover { background: var(--bg); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.primary:hover { filter: brightness(1.08); }
+  .btn.danger { color: var(--danger); }
+  .btn.sm { padding: 3px 9px; font-size: 12.5px; border-radius: 6px; }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  .presets {
+    border: 1px solid var(--border); border-radius: 10px; padding: 9px 10px 10px;
+    margin-bottom: 14px; background: var(--bg);
+  }
+  .presets legend { font-size: 12px; font-weight: 700; color: var(--text-2); padding: 0 6px; text-transform: uppercase; letter-spacing: .04em; }
+  .presetrow { display: flex; flex-wrap: wrap; gap: 6px; }
+  .presetrow .btn { text-align: left; line-height: 1.25; }
+  .presetrow .btn small { display: block; font-size: 11px; opacity: .7; font-weight: 500; }
+  .presetrow .btn.rand { border-style: dashed; }
+
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+  .tab {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 999px; padding: 5px 13px; font-size: 13px; font-weight: 600; color: var(--text-2);
+  }
+  .tab.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .tab .cnt { opacity: 0.75; font-weight: 500; }
+
+  .cardgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(215px, 1fr)); gap: 10px; max-height: 520px; overflow-y: auto; padding-right: 4px; }
+  .pcard {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 9px;
+    padding: 10px 12px; text-align: left; display: flex; flex-direction: column; gap: 4px;
+  }
+  .pcard:hover { border-color: var(--accent); }
+  .pcard.sel { border-color: var(--accent); background: var(--accent-soft); }
+  .pcard .n { font-weight: 700; font-size: 13.5px; display: flex; justify-content: space-between; gap: 4px 8px; align-items: baseline; flex-wrap: wrap; }
+  .pcard .d { font-size: 12px; color: var(--text-2); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .badge { font-size: 11px; font-weight: 700; color: var(--accent); white-space: nowrap; }
+  .pcard .badge.wrap { white-space: normal; font-size: 10.5px; line-height: 1.35; text-align: right; }
+  .badge.warn { color: var(--warn); }
+  .stats-preview { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin: 10px 0; }
+  .stat-cell { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; text-align: center; padding: 7px 2px; }
+  .stat-cell .k { font-size: 10.5px; color: var(--text-3); font-weight: 700; }
+  .stat-cell .v { font-size: 16px; font-weight: 700; }
+  .stat-cell .v.pos { color: var(--ok); }
+  .stat-cell .v.neg { color: var(--danger); }
+
+  .field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+  .field label { font-size: 12.5px; font-weight: 600; color: var(--text-2); }
+  .field input, .field select, .field textarea {
+    border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; background: var(--surface); width: 100%;
+  }
+  .field textarea { resize: vertical; min-height: 56px; }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: var(--bg); border: 1px solid var(--border); border-radius: 999px;
+    padding: 3px 6px 3px 11px; font-size: 12.5px;
+  }
+  .chip .x {
+    background: none; border: none; color: var(--text-3);
+    width: 17px; height: 17px; border-radius: 50%; font-size: 13px; line-height: 1;
+    display: flex; align-items: center; justify-content: center; padding: 0;
+  }
+  .chip .x:hover { background: var(--danger-soft); color: var(--danger); }
+  .chip.obj { border-left: 3px solid var(--accent); }
+
+  .statbtns { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+  .statbtn {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 7px 2px; text-align: center;
+  }
+  .statbtn .k { display: block; font-size: 10.5px; font-weight: 700; color: var(--text-3); }
+  .statbtn .b { display: block; font-size: 15px; font-weight: 700; }
+  .statbtn.sel { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .statbtn.sel .k { color: rgba(255,255,255,0.8); }
+
+  .bonuslist { display: flex; flex-direction: column; gap: 4px; max-height: 190px; overflow-y: auto; margin-top: 8px; }
+  .bonusrow {
+    display: flex; align-items: center; gap: 9px; padding: 6px 9px;
+    border: 1px solid var(--border); border-radius: 7px; background: var(--surface); font-size: 13px;
+  }
+  .bonusrow:hover { background: var(--bg); }
+  .bonusrow input { accent-color: var(--accent); }
+  .bonusrow .bv { margin-left: auto; font-weight: 700; color: var(--accent); }
+  .bonusrow .bd { color: var(--text-3); font-size: 11.5px; display: block; }
+
+  .rollbtn { width: 100%; padding: 12px; font-size: 15px; margin-top: 12px; border-radius: 9px; }
+
+  .result {
+    margin-top: 12px; border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px; text-align: center; display: none;
+  }
+  .result.show { display: block; }
+  .result .dice {
+    font-size: 44px; font-weight: 800; letter-spacing: -0.03em; line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .result .formula { margin-top: 8px; color: var(--text-2); font-size: 13.5px; }
+  .result .total { margin-top: 6px; font-size: 15px; font-weight: 700; }
+  .result .outcome { margin-top: 10px; font-size: 16px; font-weight: 800; letter-spacing: 0.02em; }
+  .outcome.ok { color: var(--ok); }
+  .outcome.ko { color: var(--danger); }
+  .outcome.tie { color: var(--warn); }
+  .result .actions { margin-top: 10px; display: flex; gap: 8px; justify-content: center; }
+
+  details.howto { margin-top: 10px; font-size: 13px; color: var(--text-2); }
+  details.howto summary { cursor: pointer; font-weight: 600; color: var(--text-2); }
+  details.howto ul { margin: 8px 0 0 18px; display: flex; flex-direction: column; gap: 4px; }
+
+  .creature, .threat {
+    border: 1px solid var(--border); border-radius: 9px; padding: 10px 12px; background: var(--surface);
+    margin-bottom: 8px;
+  }
+  .creature .cn { font-weight: 700; font-size: 13.5px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .creature .cstats { font-size: 12px; color: var(--text-2); font-variant-numeric: tabular-nums; margin-top: 3px; }
+  .creature .cstats b { color: var(--text); }
+  .creature .cquote { font-size: 12px; color: var(--text-3); font-style: italic; margin-top: 4px; }
+  .threat .tn { font-weight: 700; font-size: 13.5px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .threat .bar { height: 8px; background: var(--bg); border: 1px solid var(--border); border-radius: 999px; overflow: hidden; margin-top: 7px; }
+  .threat .bar i { display: block; height: 100%; background: var(--warn); }
+  .threat.done { border-color: var(--danger); background: var(--danger-soft); }
+  .threat.done .bar i { background: var(--danger); }
+  .threat .tctl { display: flex; gap: 6px; align-items: center; margin-top: 7px; }
+  .threat .tctl .cnt { font-size: 12.5px; font-weight: 700; font-variant-numeric: tabular-nums; min-width: 46px; text-align: center; }
+
+  .log { display: flex; flex-direction: column; gap: 6px; max-height: 330px; overflow-y: auto; }
+  .logitem {
+    font-size: 12.5px; padding: 7px 10px; border-radius: 7px; background: var(--bg);
+    border-left: 3px solid var(--text-3); color: var(--text-2);
+  }
+  .logitem b { color: var(--text); }
+  .logitem.ok { border-left-color: var(--ok); }
+  .logitem.ko { border-left-color: var(--danger); }
+  .logitem.warn { border-left-color: var(--warn); }
+  .logitem.info { border-left-color: var(--accent); }
+  .logitem .t { color: var(--text-3); font-size: 11px; margin-right: 6px; }
+
+  .contra {
+    background: var(--warn-soft); border: 1px solid #fcd34d; border-radius: 8px;
+    padding: 9px 12px; font-size: 13px; margin-top: 10px;
+    display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+  }
+  .contra select { border: 1px solid var(--border); border-radius: 6px; padding: 3px 6px; background: var(--surface); }
+
+  .footer-note { margin-top: 26px; color: var(--text-3); font-size: 12px; text-align: center; }
+  .req { font-size: 12.5px; color: var(--text-3); margin-top: 10px; }
+  .req .no { color: var(--danger); font-weight: 600; }
+  .req .yes { color: var(--ok); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="brand">Baraja de rol · POC</span>
+  <span class="who" id="who"></span>
+  <span class="spacer"></span>
+  <button class="btn sm" id="btn-edit" onclick="App.goCrear()" style="display:none">Editar personaje</button>
+  <button class="btn sm danger" id="btn-new" onclick="App.newGame()">Nueva partida</button>
+</div>
+
+<main>
+
+  <!-- ============ VISTA CREACIÓN ============ -->
+  <div class="view" id="vista-crear">
+    <h1>Crear personaje</h1>
+    <p class="lead">Elige una carta de cada tipo. El Arquetipo define tus estadísticas base; el resto solo aportan bonificadores cuando sean relevantes.</p>
+
+    <div class="grid2" style="margin-top:18px">
+      <div class="panel">
+        <div class="field">
+          <label for="in-nombre">Nombre del personaje</label>
+          <input id="in-nombre" type="text" placeholder="Ej.: Bruna la Duelista" oninput="App.setNombre(this.value)">
+        </div>
+
+        <fieldset class="presets">
+          <legend>Personajes precreados</legend>
+          <div class="presetrow" id="presets"></div>
+        </fieldset>
+
+        <div class="tabs" id="tabs"></div>
+        <div class="cardgrid" id="picker"></div>
+
+        <div class="req" id="reqs"></div>
+        <div class="row" style="margin-top:14px">
+          <button class="btn primary" id="btn-start" onclick="App.startGame()">Comenzar partida</button>
+          <span class="muted" id="start-hint"></span>
+        </div>
+      </div>
+
+      <div class="panel" style="position:sticky; top:64px">
+        <h3>Vista previa de la ficha</h3>
+        <div id="preview"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ VISTA JUEGO ============ -->
+  <div class="view" id="vista-jugar">
+
+    <div class="grid-game">
+      <div class="col">
+
+        <!-- FICHA -->
+        <div class="panel">
+          <h2>Ficha</h2>
+          <div id="ficha"></div>
+        </div>
+
+        <!-- TIRADA -->
+        <div class="panel">
+          <h2>Tirada</h2>
+          <div class="field">
+            <label for="in-accion">¿Qué intentas hacer?</label>
+            <textarea id="in-accion" placeholder="Ej.: Corto al bandido con mi espada…"></textarea>
+          </div>
+
+          <h3>1 · Estadística</h3>
+          <div class="statbtns" id="statbtns"></div>
+
+          <h3 style="margin-top:14px">2 · Bonificadores relevantes</h3>
+          <div class="bonuslist" id="bonuslist"></div>
+
+          <div class="row" style="margin-top:12px">
+            <div class="field" style="margin:0; width:130px">
+              <label for="in-dif">Dificultad</label>
+              <input id="in-dif" type="number" value="10" min="1" max="40" onchange="App.setDif(this.value)">
+            </div>
+            <div class="muted" id="dif-hint">10 fácil · 15 media · 20 difícil</div>
+          </div>
+
+          <div id="contra-box"></div>
+
+          <button class="btn primary rollbtn" id="btn-roll" onclick="App.roll()">Tirar d20</button>
+
+          <div class="result" id="result"></div>
+
+          <details class="howto">
+            <summary>Cómo tirar</summary>
+            <ul>
+              <li>Describe la acción y elige la estadística que el master considere relevante.</li>
+              <li>Marca solo las cartas que aplican a esta tirada (maestro y jugador deciden).</li>
+              <li>Total = d20 + estadística + bonificadores, comparado con la dificultad.</li>
+              <li>Si tienes el rasgo <b>Suerte</b>, puedes repetir una tirada fallida (1 por partida).</li>
+            </ul>
+          </details>
+        </div>
+      </div>
+
+      <div class="col">
+
+        <!-- ESCENA -->
+        <div class="panel">
+          <h2>Escena</h2>
+
+          <div class="field">
+            <label for="sel-region">Región</label>
+            <select id="sel-region" onchange="App.setRegion(this.value)"></select>
+            <div class="muted" id="region-desc"></div>
+          </div>
+
+          <div class="field">
+            <label for="sel-lugar">Lugares</label>
+            <div class="row">
+              <select id="sel-lugar" style="flex:1; border:1px solid var(--border); border-radius:8px; padding:7px 9px; background:var(--surface)"></select>
+              <button class="btn" onclick="App.addLugar()">Añadir</button>
+            </div>
+            <div class="chips" id="lugares" style="margin-top:8px"></div>
+          </div>
+
+          <div class="field" style="margin-top:14px">
+            <label for="sel-criatura">Criaturas presentes</label>
+            <div class="row">
+              <select id="sel-criatura" style="flex:1; border:1px solid var(--border); border-radius:8px; padding:7px 9px; background:var(--surface)"></select>
+              <button class="btn" onclick="App.addCriatura()">Añadir</button>
+            </div>
+            <div id="criaturas" style="margin-top:8px"></div>
+          </div>
+
+          <div class="field" style="margin-top:14px">
+            <label for="sel-amenaza">Amenazas activas</label>
+            <div class="row">
+              <select id="sel-amenaza" style="flex:1; border:1px solid var(--border); border-radius:8px; padding:7px 9px; background:var(--surface)"></select>
+              <button class="btn" onclick="App.addAmenaza()">Activar</button>
+            </div>
+            <div id="amenazas" style="margin-top:8px"></div>
+          </div>
+        </div>
+
+        <!-- REGISTRO -->
+        <div class="panel">
+          <h2>Registro</h2>
+          <div class="log" id="log"></div>
+        </div>
+      </div>
+    </div>
+
+    <p class="footer-note" id="deckinfo"></p>
+  </div>
+
+</main>
+
+<script>
+/* ============================================================
+   DATOS DE LA BARAJA (192 cartas)
+   ============================================================ */
+const DATA = {
+  razas: [
+    {n:"Humano", d:"“Bastante normalitos”. Una vez por escena, +1 a una tirada si explicas cómo tu experiencia previa te ayuda.", v:1},
+    {n:"Elfo", d:"+1 a tiradas que requieran de tus sentidos. Ves ligeramente en la oscuridad.", v:1},
+    {n:"Enano", d:"Resistencia a venenos y daños físicos. +1 a trabajos de metal y piedra.", v:1},
+    {n:"Mediano", d:"+1 a ocultación y sigilo. +1 a tiradas de voluntad.", v:1},
+    {n:"Lagartiano", d:"Escupes una pequeña llama. +1 a supervivencia, calor, frío o ambientes naturales.", v:1},
+    {n:"Gnomo", d:"+1 a ingenio, mecanismos o conocimientos poco comunes. Construyes objetos con materiales improvisados.", v:1},
+    {n:"Semidemonio", d:"Resistes el fuego y ves perfectamente en la oscuridad. +1 a intimidar o tratar con criaturas sobrenaturales.", v:1},
+    {n:"Hombre pájaro", d:"Pequeños vuelos. +1 a percepción desde las alturas, equilibrio y desplazamiento.", v:1},
+    {n:"Semielfo", d:"+1 a percepción y trato social. Te desenvuelves con facilidad entre culturas diferentes.", v:1},
+    {n:"Minotauro", d:"+1 a fuerza física e intimidación. Atraviesas obstáculos débiles usando tu fuerza bruta.", v:1}
+  ],
+  profesiones: [
+    {n:"Mercader", d:"+2 a negociar, comprar, vender y valorar mercancías.", v:2},
+    {n:"Soldado", d:"+2 a combatir, reconocer tácticas y conocimientos militares.", v:2},
+    {n:"Ladrón", d:"+2 a robar, abrir cerraduras y superar sistemas de seguridad.", v:2},
+    {n:"Cazador", d:"+2 a rastrear, cazar y desenvolverse en la naturaleza.", v:2},
+    {n:"Artesano", d:"+2 a fabricar, reparar y trabajar con herramientas.", v:2},
+    {n:"Herrero", d:"+2 a fabricar, reparar y trabajar con yunque.", v:2},
+    {n:"Granjero", d:"+2 a agricultura, animales y tareas rurales.", v:2},
+    {n:"Marinero", d:"+2 a navegar, orientarse en el mar y manejar embarcaciones.", v:2},
+    {n:"Carretero", d:"+2 a conducir, orientarse por caminos y manejar animales de carga.", v:2},
+    {n:"Médico", d:"+2 a diagnosticar enfermedades y tratar heridas.", v:2},
+    {n:"Erudito", d:"+2 a investigar, recordar conocimientos y comprender textos antiguos.", v:2},
+    {n:"Sacerdote", d:"+2 a conocimientos religiosos, rituales y tradiciones.", v:2},
+    {n:"Guerrero", d:"+2 a combatir y reconocer armas y técnicas de combate.", v:2},
+    {n:"Vagabundo", d:"+2 a callejear, encontrar refugio y conseguir rumores.", v:2},
+    {n:"Noble", d:"+2 a etiqueta, política y tratar con miembros de la aristocracia.", v:2},
+    {n:"Artista", d:"+2 a actuar, crear arte y captar la atención de otras personas.", v:2},
+    {n:"Alquimista", d:"+2 a preparar, identificar y manipular sustancias.", v:2},
+    {n:"Cocinero", d:"+2 a cocinar, reconocer ingredientes y trabajar con alimentos.", v:2},
+    {n:"Escriba", d:"+2 a escribir, descifrar documentos y tratar con burocracia.", v:2},
+    {n:"Contrabandista", d:"+2 a ocultar mercancías, encontrar rutas ilegales y reconocer productos prohibidos.", v:2},
+    {n:"Cazarrecompensas", d:"+2 a rastrear personas, capturar objetivos y tratar con criminales.", v:2},
+    {n:"Aventurero", d:"+2 a desenvolverte en situaciones desconocidas y aprovechar recursos improvisados.", v:2},
+    {n:"Mago", d:"+2 al lanzar hechizos.", v:2}
+  ],
+  rasgos: [
+    {n:"Espadachín", d:"+2 siempre que uses una espada.", v:2},
+    {n:"Manos hábiles", d:"+2 a todas las tareas de prestidigitación.", v:2},
+    {n:"Cerrajero", d:"+2 a abrir, reparar o forzar cerraduras.", v:2},
+    {n:"Valiente", d:"+1 siempre que algo conlleve un riesgo.", v:1},
+    {n:"Calmado", d:"+1 a todo lo que ponga tu mente a prueba.", v:1},
+    {n:"Irritable", d:"Más fácil que te enfades, pero das más miedo. +1 a intimidar cuando estás enfadado.", v:1},
+    {n:"Curioso", d:"+1 cuando investigas algo desconocido. Te cuesta ignorar un misterio.", v:1},
+    {n:"Desconfiado", d:"+1 para detectar engaños o peligros ocultos.", v:1},
+    {n:"Protector", d:"+1 cuando intentas proteger a otra persona de un peligro.", v:1},
+    {n:"Temerario", d:"+2 cuando realizas una acción especialmente peligrosa.", v:2},
+    {n:"Sigiloso", d:"+2 cuando intentas moverte sin ser detectado.", v:2},
+    {n:"Persuasivo", d:"+2 cuando intentas convencer a alguien mediante argumentos razonables.", v:2},
+    {n:"Mentiroso", d:"+2 cuando inventas una mentira convincente.", v:2},
+    {n:"Intimidante", d:"+2 cuando intentas conseguir algo mediante amenazas.", v:2},
+    {n:"Observador", d:"+2 cuando buscas pequeños detalles, pistas o irregularidades.", v:2},
+    {n:"Memoria prodigiosa", d:"+2 cuando intentas recordar algo que hayas visto, leído o escuchado.", v:2},
+    {n:"Improvisador", d:"+1 cuando usas un objeto de una forma para la que no fue diseñada.", v:1},
+    {n:"Resistente", d:"+1 cuando intentas soportar dolor, cansancio, hambre o condiciones extremas.", v:1},
+    {n:"Atento", d:"+1 a tiradas realizadas para ayudar a otro personaje.", v:1},
+    {n:"Suerte", d:"Una vez por partida, después de fallar una tirada, puedes repetirla.", v:0, esp:"suerte"},
+    {n:"Instinto", d:"Una vez por escena, puedes preguntar al Master cuál de varias opciones parece más peligrosa.", v:0},
+    {n:"Líder natural", d:"+1 cuando das órdenes o coordinas a otras personas.", v:1},
+    {n:"Glotón", d:"Come casi cualquier cosa sin consecuencias. +1 a resistencia física después de comer.", v:1},
+    {n:"Fanfarrón", d:"+1 cuando intentas impresionar a alguien, pero te cuesta reconocer una derrota.", v:1},
+    {n:"Honorable", d:"+1 cuando cumples una promesa o actúas según tus principios.", v:1},
+    {n:"Cobarde", d:"+2 cuando intentas escapar de un peligro.", v:2},
+    {n:"Vengativo", d:"+1 cuando actúas contra alguien que te ha perjudicado.", v:1},
+    {n:"Encantador", d:"+2 cuando intentas causar una buena primera impresión.", v:2},
+    {n:"Madrugador", d:"+1 a la primera tirada importante después de descansar.", v:1}
+  ],
+  trasfondos: [
+    {n:"Huérfano", d:"Creciste sin conocer a tus padres. Aprendiste a depender de ti mismo."},
+    {n:"Noble caído", d:"Tu familia perdió su posición y sus riquezas. Alguien tuvo algo que ver."},
+    {n:"Veterano de guerra", d:"Has visto cosas que preferirías olvidar. Conoces bien la crueldad de la guerra."},
+    {n:"Criminal reformado", d:"Antes vivías de cometer delitos. Algunos viejos conocidos todavía te recuerdan."},
+    {n:"Aprendiz de mago", d:"Pasaste años estudiando artes que apenas comprendías."},
+    {n:"Hijo de campesinos", d:"Creciste trabajando la tierra y conoces bien la vida humilde."},
+    {n:"Miembro de un gremio", d:"Perteneciste durante años a una organización profesional."},
+    {n:"Superviviente", d:"Algo terrible ocurrió y fuiste uno de los pocos que sobrevivió."},
+    {n:"Exiliado", d:"Tuviste que abandonar tu hogar y no puedes regresar."},
+    {n:"Prisionero fugado", d:"Estuviste encerrado durante años. Alguien podría seguir buscándote."},
+    {n:"Discípulo", d:"Fuiste entrenado personalmente por un maestro excepcional."},
+    {n:"Criado entre criminales", d:"Aprendiste a moverte entre ladrones, contrabandistas y estafadores."},
+    {n:"Antiguo sirviente", d:"Pasaste años trabajando para una familia poderosa."},
+    {n:"Explorador", d:"Has viajado por lugares que la mayoría de personas jamás ha visto."},
+    {n:"Heredero", d:"Te pertenece algo que todavía no has reclamado: una propiedad, un título, una deuda o un secreto."},
+    {n:"Cultista arrepentido", d:"Formaste parte de una organización que practicaba rituales prohibidos."},
+    {n:"Superviviente de naufragio", d:"Perdiste todo en el mar y todavía recuerdas aquella noche."},
+    {n:"Hijo de nadie", d:"Nunca supiste realmente de dónde vienes."},
+    {n:"Famoso en un lugar", d:"En algún sitio eres conocido, para bien o para mal."},
+    {n:"Deuda familiar", d:"Alguien heredó una deuda que ahora te corresponde pagar."}
+  ],
+  ambiciones: [
+    {n:"Familiar perdido", d:"Te lo arrebataron hace tiempo. Quizás se fue él. Pero quieres encontrarlo."},
+    {n:"Hacerse rico", d:"Estás harto de la vida de aventurero. Quieres riquezas suficientes para no preocuparte."},
+    {n:"Convertirse en leyenda", d:"Tu nombre debe ser recordado en este mundo."},
+    {n:"Venganza", d:"Alguien te hizo daño. A ti o a alguien cercano. Y deben pagar por ello."},
+    {n:"Justiciero", d:"El mundo apesta a maldad. Y tú eres alérgico."},
+    {n:"Encontrar un lugar legendario", d:"Está en alguna parte. Tú lo sabes, y vas a encontrarlo."},
+    {n:"Convertirse en Rey", d:"Los demás son unos necios que debes guiar por el buen camino."},
+    {n:"Villano", d:"El mundo es demasiado bonito. Tienes que verlo arder."},
+    {n:"Ganar poder", d:"Quieres ser el más fuerte de todos."},
+    {n:"Buscatesoros", d:"El mundo está lleno de reliquias fascinantes que debes encontrar."},
+    {n:"Dominador", d:"Debes imponerte sobre los demás y dominarlos."},
+    {n:"Romántico", d:"Quieres encontrar el amor."},
+    {n:"Celestino", d:"Quieres que alguien encuentre el amor gracias a ti."},
+    {n:"Lujurioso", d:"Cuantos más, mejor."},
+    {n:"Vago", d:"Todo te da pereza. Si pudieras no hacer nada, mejor. Pero siempre te la lían…"},
+    {n:"Pacificador", d:"Odias la guerra y el conflicto. Cosas del pasado que todo el mundo debe dejar atrás."},
+    {n:"Chuck Lee", d:"Ser el mejor artista marcial del mundo."},
+    {n:"Descubrir la verdad", d:"Hay algo que no encaja. Quieres descubrir qué está pasando realmente."},
+    {n:"Ser libre", d:"Nadie volverá a decirte qué hacer."},
+    {n:"Proteger a alguien", d:"Hay una persona que significa más para ti que cualquier otra cosa."},
+    {n:"Crear un legado", d:"Quieres construir algo que siga existiendo cuando tú ya no estés."},
+    {n:"Encontrar tu hogar", d:"Has pasado demasiado tiempo vagando. Quieres encontrar un lugar al que pertenecer."},
+    {n:"Demostrar tu valor", d:"Todos creen que no eres suficiente. Vas a demostrarles lo contrario."},
+    {n:"Superar a tu maestro", d:"Alguien te enseñó todo lo que sabes. Ahora quieres demostrar que eres mejor."}
+  ],
+  arquetipos: [
+    {n:"Fortachón", s:[3,1,-1,0,2], c:"Fuerza física y presencia"},
+    {n:"Bruto", s:[3,0,-1,2,1], c:"Potencia y resistencia"},
+    {n:"Atleta", s:[3,2,0,-1,1], c:"Físico excepcional"},
+    {n:"Coloso", s:[3,-1,0,2,1], c:"Fuerza y voluntad"},
+    {n:"Matón", s:[3,1,-1,2,0], c:"Fuerza e intimidación"},
+    {n:"Acróbata", s:[1,3,2,-1,0], c:"Movimiento y coordinación"},
+    {n:"Explorador", s:[1,3,2,0,-1], c:"Agilidad y percepción"},
+    {n:"Duelista", s:[2,3,0,1,-1], c:"Combate técnico"},
+    {n:"Superviviente", s:[2,3,-1,1,0], c:"Adaptabilidad física"},
+    {n:"Erudito", s:[-1,0,3,2,1], c:"Conocimiento y voluntad"},
+    {n:"Intelectual", s:[0,1,3,-1,2], c:"Mente y persuasión"},
+    {n:"Investigador", s:[1,2,3,-1,0], c:"Observación y análisis"},
+    {n:"Estratega", s:[1,-1,3,2,0], c:"Planificación y disciplina"},
+    {n:"Sabio", s:[-1,0,3,1,2], c:"Conocimiento y comprensión"},
+    {n:"Místico", s:[0,-1,2,3,1], c:"Poder interior"},
+    {n:"Asceta", s:[1,0,2,3,-1], c:"Disciplina y concentración"},
+    {n:"Líder", s:[1,0,2,-1,3], c:"Mente y autoridad"},
+    {n:"Manipulador", s:[-1,1,2,0,3], c:"Engaño e influencia"},
+    {n:"Titán", s:[3,1,-2,3,0], c:"Fuerza y voluntad"},
+    {n:"Pícaro", s:[0,3,2,-1,1], c:"Astucia y agilidad"},
+    {n:"Genio", s:[-2,1,3,2,1], c:"Intelecto extraordinario"},
+    {n:"Carismático", s:[-1,0,1,2,3], c:"Presencia y personalidad"},
+    {n:"Visionario", s:[0,1,3,2,2], c:"Ideas y determinación"}
+  ],
+  regiones: [
+    {n:"Ciudad", d:"Gran concentración de personas, comercio y oportunidades. Todo se puede comprar, pero casi todo tiene un precio."},
+    {n:"Bosque", d:"Territorio salvaje y poco transitado. Oculta animales, ruinas y criaturas que prefieren no ser encontradas."},
+    {n:"Montañas", d:"Terreno peligroso. Las antiguas minas y fortalezas esconden riquezas y peligros."},
+    {n:"Pantano", d:"Tierra húmeda y traicionera. Es fácil perderse y difícil saber qué se mueve bajo el agua."},
+    {n:"Desierto", d:"Un lugar enorme donde sobrevivir ya es un desafío."},
+    {n:"Costa", d:"Pueblos pesqueros, puertos, piratas y restos de naufragios."},
+    {n:"Tierras heladas", d:"Donde el frío puede ser tan peligroso como cualquier criatura."},
+    {n:"Tierras de cultivo", d:"Aldeas, granjas, caminos y pequeñas comunidades."},
+    {n:"Ruinas antiguas", d:"Restos de una civilización desaparecida. Nadie sabe exactamente qué ocurrió."},
+    {n:"Tierras malditas", d:"Algo sucedió aquí. La naturaleza misma parece haberse alterado."}
+  ],
+  lugares: [
+    {n:"Taberna", d:"Comer, beber, descansar y conseguir rumores."},
+    {n:"Plaza", d:"Centro de la vida pública. Mercaderes, nobles, mendigos, guardias y artistas se mezclan aquí."},
+    {n:"Tienda", d:"Comprar y vender objetos. El dueño probablemente sepa más de lo que aparenta."},
+    {n:"Templo", d:"Lugar sagrado: sacerdotes, refugio, conocimiento o respuestas."},
+    {n:"Guarida", d:"Un lugar utilizado por criminales, monstruos o algún grupo secreto."},
+    {n:"Cueva", d:"Oscuridad, caminos estrechos y cosas que viven lejos de la luz."},
+    {n:"Castillo", d:"Una fortaleza y el hogar de alguien importante."},
+    {n:"Mercado", d:"Todo está a la venta si sabes a quién preguntar."},
+    {n:"Prisión", d:"Un lugar del que nadie debería poder escapar."},
+    {n:"Biblioteca", d:"Libros, mapas y conocimientos olvidados."},
+    {n:"Cementerio", d:"Un lugar tranquilo. Quizás demasiado."},
+    {n:"Torre abandonada", d:"Nadie sabe quién la construyó ni por qué sigue en pie."},
+    {n:"Campamento", d:"Refugio temporal para viajeros, soldados o bandidos."},
+    {n:"Muelle", d:"Barcos, mercancías, marineros y oportunidades para desaparecer."},
+    {n:"Casa abandonada", d:"Parece vacía. Eso no significa que lo esté."},
+    {n:"Ruinas", d:"Lo que queda de un lugar que una vez fue importante."},
+    {n:"Puente", d:"Punto de paso obligado. Alguien puede estar esperando al otro lado."},
+    {n:"Santuario", d:"Lugar apartado dedicado a una deidad, espíritu o poder antiguo."}
+  ],
+  criaturas: [
+    {n:"Campesino", s:[1,1,0,0,0], f:"Tendría más fuerza si comiese mejor.", a:"agricultura, animales, trabajo físico, conocimiento local"},
+    {n:"Guardia", s:[1,1,0,1,1], f:"Vas a tener que acompañarme.", a:"combate, vigilancia, autoridad"},
+    {n:"Mercader", s:[0,0,1,1,2], f:"Todo tiene un precio.", a:"comercio, negociación, valorar objetos"},
+    {n:"Bandido", s:[1,2,0,1,0], f:"Dame la bolsa y nadie saldrá herido.", a:"emboscadas, intimidación, supervivencia"},
+    {n:"Goblin", s:[-1,2,0,1,-1], f:"¡Son muchos! ¡Corred!", a:"esconderse, emboscar, improvisar trampas"},
+    {n:"Lobo", s:[1,2,-1,1,0], f:"No está solo.", a:"rastrear, perseguir, atacar en grupo"},
+    {n:"Caballero", s:[2,1,1,2,1], f:"Por mi honor.", a:"combate, etiqueta, disciplina"},
+    {n:"Noble", s:[0,0,2,1,3], f:"¿Sabes con quién estás hablando?", a:"política, etiqueta, riqueza, contactos"},
+    {n:"Sacerdote", s:[0,0,2,2,1], f:"Hay cosas que no deberías invocar.", a:"religión, rituales, historia"},
+    {n:"Mercenario", s:[2,2,0,1,0], f:"Me pagan por estar aquí.", a:"combate, armas, tácticas"},
+    {n:"Bruja", s:[-1,1,2,3,1], f:"Todo precio acaba pagándose.", a:"magia, pociones, maldiciones, conocimiento oculto"},
+    {n:"Rey", s:[0,-1,2,3,3], f:"Todo esto me pertenece.", a:"autoridad, política, riqueza, ejército"},
+    {n:"Dragón", s:[5,2,3,4,3], f:"Los mortales siempre acaban olvidando quién manda.", a:"vuelo, fuego, tesoros, conocimiento antiguo"}
+  ],
+  objetos: [
+    {n:"Espada del Alba", d:"Brilla en presencia de criaturas sobrenaturales.", v:0},
+    {n:"Daga de sombra", d:"No refleja la luz. +1 al atacar desde el ocultamiento.", v:1},
+    {n:"Armadura de hierro negro", d:"Reduce las consecuencias de ataques físicos, pero dificulta moverse silenciosamente.", v:0},
+    {n:"Poción de curación", d:"Recupera de una herida grave a alguien que todavía pueda ser salvado.", v:0},
+    {n:"Poción de fuerza", d:"Durante una escena, +2 FUE.", v:2},
+    {n:"Poción de invisibilidad", d:"Durante unos minutos, eres invisible. Tus acciones todavía pueden revelar tu posición.", v:0},
+    {n:"Amuleto protector", d:"La primera vez que sufrirías una consecuencia grave, puedes ignorarla.", v:0},
+    {n:"Llave maestra", d:"Puede abrir cualquier cerradura normal.", v:0},
+    {n:"Mapa incompleto", d:"Muestra una región desconocida. Hay partes deliberadamente tachadas.", v:0},
+    {n:"Carta de recomendación", d:"Documento firmado por una persona importante. Puede abrirte puertas… si nadie comprueba su autenticidad.", v:0},
+    {n:"Anillo de autoridad", d:"Algunas personas asumirán que tienes un rango elevado.", v:0},
+    {n:"Cetro antiguo", d:"Parece inútil, pero ciertas criaturas reaccionan ante él.", v:0},
+    {n:"Libro prohibido", d:"Contiene conocimientos que no deberían existir.", v:0},
+    {n:"Moneda maldita", d:"Siempre vuelve a aparecer en tu bolsillo.", v:0},
+    {n:"Capa del viajero", d:"Nunca parece ensuciarse y protege contra el clima.", v:0},
+    {n:"Cuerno de guerra", d:"Su sonido puede escucharse a una distancia extraordinaria.", v:0}
+  ],
+  amenazas: [
+    {n:"La Guardia se acerca", max:6, f:"Cada vez hay más ojos buscándote."},
+    {n:"El ritual comienza", max:8, f:"Las velas se encienden una a una."},
+    {n:"El monstruo despierta", max:10, f:"Algo enorme se está moviendo bajo tierra."},
+    {n:"La ciudad entra en pánico", max:6, f:"La gente empieza a correr."},
+    {n:"El barco se hunde", max:6, f:"El agua ya llega a cubierta."},
+    {n:"El ejército marcha", max:8, f:"Todavía está lejos. Pero cada vez se escucha con mayor fuerza."}
+  ]
+};
+
+const STAT_KEYS = ["FUE","AGI","INT","VOL","PRE"];
+const DISPLAY = { arquetipo:"arquetipo", raza:"raza", profesion:"profesión", rasgo:"rasgo", trasfondo:"trasfondo", ambicion:"ambición" };
+const TABS = [
+  {id:"arquetipo", label:"Arquetipo", max:1, req:true},
+  {id:"raza", label:"Raza", max:1, req:true},
+  {id:"profesion", label:"Profesión", max:1, req:true},
+  {id:"rasgo", label:"Rasgos", max:2, req:true},
+  {id:"trasfondo", label:"Trasfondo", max:1, req:false},
+  {id:"ambicion", label:"Ambición", max:1, req:true}
+];
+const TAB_SOURCE = {
+  arquetipo:"arquetipos", raza:"razas", profesion:"profesiones",
+  rasgo:"rasgos", trasfondo:"trasfondos", ambicion:"ambiciones"
+};
+
+/* Personajes precargados: índices sobre DATA */
+const PRESETS = [
+  { nombre:"Bruna la Duelista",      arquetipo:7,  raza:0, profesion:20, rasgos:[0, 3],  trasfondo:2,  ambicion:3 },
+  { nombre:"Thalion de los Bosques", arquetipo:6,  raza:1, profesion:3,  rasgos:[14,10], trasfondo:13, ambicion:5 },
+  { nombre:"Nyx, la Negociadora",    arquetipo:17, raza:6, profesion:14, rasgos:[11,13], trasfondo:1,  ambicion:6 },
+  { nombre:"Gorm Piedra-Rota",       arquetipo:0,  raza:2, profesion:5,  rasgos:[17,24], trasfondo:6,  ambicion:19 },
+  { nombre:"Iria la Erudita",        arquetipo:13, raza:5, profesion:16, rasgos:[15,6],  trasfondo:4,  ambicion:17 }
+];
+const RAND_NAMES = ["Aldo","Bruno","Celia","Dorna","Eira","Faro","Gorm","Hilda","Iria","Jarek","Kael","Luna","Mora","Nyx","Orin","Pela","Quim","Renna","Sable","Tarek","Uma","Vero","Wryn","Ximena","Yago","Zaira"];
+const RAND_EPITHETS = ["el Errante","la Intrépida","Ceniza","el Silencioso","de Hierro","la Escurridiza","Ojo de Halcón","la Perdida","el Maldito","del Abrismo","la Hambrienta","de la Mar","la Sonriente","el Despierto"];
+
+/* ============================================================
+   ESTADO
+   ============================================================ */
+const STORE_KEY = "baraja-rol-poc-v1";
+
+let state = {
+  vista: "crear",
+  tab: "arquetipo",
+  personaje: { nombre:"", arquetipo:null, raza:null, profesion:null, rasgos:[], trasfondo:null, ambicion:null, objetos:[], suerteUsada:false },
+  tirada: { stat:0, sel:{}, dif:10, contra:null, contraStat:0 },
+  escena: { region:0, lugares:[], criaturas:[], amenazas:[] },
+  log: [],
+  uid: 1,
+  lastRoll: null
+};
+
+function esc(s) {
+  return String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function fmtStat(v) { return v > 0 ? "+" + v : String(v); }
+function now() {
+  const d = new Date();
+  return d.getHours().toString().padStart(2,"0") + ":" + d.getMinutes().toString().padStart(2,"0");
+}
+function deckCount() {
+  return Object.values(DATA).reduce((a, arr) => a + arr.length, 0);
+}
+
+/* ============================================================
+   APP
+   ============================================================ */
+const App = {
+
+  /* ---------- persistencia ---------- */
+  save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch(e) {} },
+  load() {
+    try {
+      const raw = localStorage.getItem(STORE_KEY);
+      if (raw) state = Object.assign(state, JSON.parse(raw));
+    } catch(e) {}
+  },
+
+  /* ---------- utilidades de datos ---------- */
+  getArquetipo() { return state.personaje.arquetipo != null ? DATA.arquetipos[state.personaje.arquetipo] : null; },
+
+  bonusCards() {
+    const p = state.personaje;
+    const out = [];
+    if (p.raza != null && DATA.razas[p.raza].v > 0) out.push({key:"raza:0", n:DATA.razas[p.raza].n, v:DATA.razas[p.raza].v, d:DATA.razas[p.raza].d});
+    if (p.profesion != null && DATA.profesiones[p.profesion].v > 0) out.push({key:"profesion:0", n:DATA.profesiones[p.profesion].n, v:DATA.profesiones[p.profesion].v, d:DATA.profesiones[p.profesion].d});
+    p.rasgos.forEach((idx, i) => {
+      const r = DATA.rasgos[idx];
+      if (r.v > 0) out.push({key:"rasgo:"+i, n:r.n, v:r.v, d:r.d});
+    });
+    p.objetos.forEach((idx, i) => {
+      const o = DATA.objetos[idx];
+      if (o.v > 0) out.push({key:"objeto:"+i, n:o.n, v:o.v, d:o.d});
+    });
+    return out;
+  },
+
+  /* ---------- navegación ---------- */
+  goCrear() {
+    state.vista = "crear";
+    this.save(); this.render();
+  },
+  goJugar() {
+    state.vista = "jugar";
+    this.save(); this.render();
+  },
+
+  startGame() {
+    const p = state.personaje;
+    const miss = [];
+    if (p.arquetipo == null) miss.push("arquetipo");
+    if (p.raza == null) miss.push("raza");
+    if (p.profesion == null) miss.push("profesión");
+    if (p.rasgos.length === 0) miss.push("rasgo");
+    if (p.ambicion == null) miss.push("ambición");
+    if (miss.length) { this.renderReqs(); return; }
+    if (!p.nombre.trim()) p.nombre = "Sin nombre";
+    this.log("info", "Partida iniciada con <b>" + esc(p.nombre) + "</b>, " + esc(this.getArquetipo().n) + ".");
+    this.goJugar();
+  },
+
+  newGame() {
+    if (!confirm("¿Empezar una partida nueva? Se borrará el personaje y el registro actual.")) return;
+    localStorage.removeItem(STORE_KEY);
+    state = {
+      vista: "crear", tab: "arquetipo",
+      personaje: { nombre:"", arquetipo:null, raza:null, profesion:null, rasgos:[], trasfondo:null, ambicion:null, objetos:[], suerteUsada:false },
+      tirada: { stat:0, sel:{}, dif:10, contra:null, contraStat:0 },
+      escena: { region:0, lugares:[], criaturas:[], amenazas:[] },
+      log: [], uid: 1, lastRoll: null
+    };
+    this.save(); this.render();
+  },
+
+  /* ---------- creación ---------- */
+  setTab(id) { state.tab = id; this.save(); this.render(); },
+  setNombre(v) { state.personaje.nombre = v; this.save(); },
+
+  pick(id, idx) {
+    const p = state.personaje;
+    if (id === "arquetipo") p.arquetipo = (p.arquetipo === idx ? null : idx);
+    else if (id === "raza") p.raza = (p.raza === idx ? null : idx);
+    else if (id === "profesion") p.profesion = (p.profesion === idx ? null : idx);
+    else if (id === "trasfondo") p.trasfondo = (p.trasfondo === idx ? null : idx);
+    else if (id === "ambicion") p.ambicion = (p.ambicion === idx ? null : idx);
+    else if (id === "rasgo") {
+      const i = p.rasgos.indexOf(idx);
+      if (i >= 0) p.rasgos.splice(i, 1);
+      else if (p.rasgos.length < 2) p.rasgos.push(idx);
+      else return;
+    }
+    this.save(); this.render();
+  },
+
+  applyCharacter(c) {
+    const p = state.personaje;
+    p.nombre = c.nombre || "";
+    p.arquetipo = c.arquetipo;
+    p.raza = c.raza;
+    p.profesion = c.profesion;
+    p.rasgos = (c.rasgos || []).slice(0, 2);
+    p.trasfondo = c.trasfondo == null ? null : c.trasfondo;
+    p.ambicion = c.ambicion;
+    p.objetos = [];
+    p.suerteUsada = false;
+    state.tirada.sel = {};
+    state.tab = "arquetipo";
+    const inp = document.getElementById("in-nombre");
+    if (inp) inp.value = p.nombre;
+    this.log("info", `Personaje precargado: <b>${esc(p.nombre || "Sin nombre")}</b>.`);
+    this.save(); this.render();
+  },
+
+  applyPreset(i) { this.applyCharacter(PRESETS[i]); },
+
+  randomChar() {
+    const r = n => Math.floor(Math.random() * n);
+    const unique = (n, count) => {
+      const pool = Array.from({ length: n }, (_, i) => i), out = [];
+      while (out.length < count && pool.length) out.push(pool.splice(r(pool.length), 1)[0]);
+      return out;
+    };
+    this.applyCharacter({
+      nombre: `${RAND_NAMES[r(RAND_NAMES.length)]} ${RAND_EPITHETS[r(RAND_EPITHETS.length)]}`,
+      arquetipo: r(DATA.arquetipos.length),
+      raza: r(DATA.razas.length),
+      profesion: r(DATA.profesiones.length),
+      rasgos: unique(DATA.rasgos.length, 1 + r(2)),
+      trasfondo: r(DATA.trasfondos.length),
+      ambicion: r(DATA.ambiciones.length)
+    });
+  },
+
+  selectedFor(id, idx) {
+    const p = state.personaje;
+    if (id === "arquetipo") return p.arquetipo === idx;
+    if (id === "raza") return p.raza === idx;
+    if (id === "profesion") return p.profesion === idx;
+    if (id === "trasfondo") return p.trasfondo === idx;
+    if (id === "ambicion") return p.ambicion === idx;
+    if (id === "rasgo") return p.rasgos.includes(idx);
+    return false;
+  },
+
+  renderReqs() {
+    const p = state.personaje;
+    const items = [
+      ["arquetipo", p.arquetipo != null], ["raza", p.raza != null],
+      ["profesión", p.profesion != null], ["rasgo", p.rasgos.length > 0],
+      ["ambición", p.ambicion != null]
+    ];
+    document.getElementById("reqs").innerHTML = items.map(([n, ok]) =>
+      `<span class="${ok ? "yes" : "no"}">${ok ? "✓" : "✗"} ${n}</span>`
+    ).join(" &nbsp;·&nbsp; ");
+  },
+
+  /* ---------- tirada ---------- */
+  setStat(i) { state.tirada.stat = i; state.tirada.sel = {}; this.save(); this.render(); },
+  setDif(v) { state.tirada.dif = Math.max(1, parseInt(v) || 10); this.save(); },
+  toggleBonus(key) {
+    if (state.tirada.sel[key]) delete state.tirada.sel[key];
+    else state.tirada.sel[key] = true;
+    this.save(); this.renderBonus();
+  },
+
+  selectedBonusSum() {
+    const cards = this.bonusCards();
+    return cards.filter(c => state.tirada.sel[c.key]).reduce((a, c) => a + c.v, 0);
+  },
+
+  roll() {
+    const t = state.tirada;
+    const arq = this.getArquetipo();
+    if (!arq) return;
+    const accion = document.getElementById("in-accion").value.trim();
+    const d20 = 1 + Math.floor(Math.random() * 20);
+    const statBase = arq.s[t.stat];
+    const bonus = this.selectedBonusSum();
+    const total = d20 + statBase + bonus;
+    const parts = [`d20 <b>${d20}</b>`, `${STAT_KEYS[t.stat]} ${fmtStat(statBase)}`];
+    const cards = this.bonusCards().filter(c => t.sel[c.key]);
+    cards.forEach(c => parts.push(`${esc(c.n)} ${fmtStat(c.v)}`));
+
+    let outcome, outcomeCls, logCls;
+    if (t.contra != null) {
+      const inst = state.escena.criaturas.find(c => c.id === t.contra);
+      if (inst) {
+        const cr = DATA.criaturas[inst.idx];
+        const cd20 = 1 + Math.floor(Math.random() * 20);
+        const ctotal = cd20 + cr.s[t.contraStat];
+        if (total > ctotal) { outcome = `¡VICTORIA! (${total} vs ${ctotal})`; outcomeCls = "ok"; logCls = "ok"; }
+        else if (total < ctotal) { outcome = `DERROTA (${total} vs ${ctotal})`; outcomeCls = "ko"; logCls = "ko"; }
+        else { outcome = `EMPATE (${total})`; outcomeCls = "tie"; logCls = "warn"; }
+        state.lastRoll = { d20, contra: t.contra, accion, outcomeKO: total < ctotal };
+        this.showResult(d20, parts, total, `${STAT_KEYS[t.contraStat]} de ${esc(cr.n)}: d20 <b>${cd20}</b> + ${fmtStat(cr.s[t.contraStat])} = <b>${ctotal}</b>`, outcome, outcomeCls);
+        const desc = accion ? `“${esc(accion)}” — ` : "";
+        this.log(logCls, `${desc}${parts.join(" + ")} = <b>${total}</b> → ${outcome} contra ${esc(cr.n)}`);
+      }
+    } else {
+      if (total >= t.dif) { outcome = `¡ÉXITO! (${total} vs ${t.dif})`; outcomeCls = "ok"; logCls = "ok"; }
+      else { outcome = `FRACASO (${total} vs ${t.dif})`; outcomeCls = "ko"; logCls = "ko"; }
+      state.lastRoll = { d20, accion, dif: t.dif, outcomeKO: total < t.dif };
+      this.showResult(d20, parts, total, `Dificultad <b>${t.dif}</b>`, outcome, outcomeCls);
+      const desc = accion ? `“${esc(accion)}” — ` : "";
+      this.log(logCls, `${desc}${parts.join(" + ")} = <b>${total}</b> → ${outcome}`);
+    }
+    state.lastRoll.total = total;
+    this.save();
+    this.renderResultActions();
+  },
+
+  showResult(d20, parts, total, compare, outcome, cls) {
+    const el = document.getElementById("result");
+    el.classList.add("show");
+    let n = d20;
+    const tick = setInterval(() => {
+      n = 1 + Math.floor(Math.random() * 20);
+      el.innerHTML = this.resultHTML(n, parts, total, compare, outcome, cls, false);
+    }, 55);
+    setTimeout(() => {
+      clearInterval(tick);
+      el.innerHTML = this.resultHTML(d20, parts, total, compare, outcome, cls, true);
+      this.renderResultActions();
+    }, 480);
+  },
+
+  resultHTML(d20, parts, total, compare, outcome, cls, settled) {
+    return `
+      <div class="dice">${d20}</div>
+      <div class="formula">${parts.join(" &nbsp;+&nbsp; ")} = <b>${total}</b></div>
+      <div class="total">${compare}</div>
+      <div class="outcome ${cls}">${settled ? outcome : "…"}</div>
+      <div class="actions" id="result-actions"></div>`;
+  },
+
+  renderResultActions() {
+    const box = document.getElementById("result-actions");
+    if (!box) return;
+    const p = state.personaje;
+    const hasSuerte = p.rasgos.some(i => DATA.rasgos[i].esp === "suerte");
+    const failed = state.lastRoll && state.lastRoll.outcomeKO;
+    box.innerHTML = "";
+    if (hasSuerte && !p.suerteUsada && failed) {
+      const b = document.createElement("button");
+      b.className = "btn sm";
+      b.textContent = "Usar Suerte (repetir)";
+      b.onclick = () => App.useSuerte();
+      box.appendChild(b);
+    }
+  },
+
+  useSuerte() {
+    const p = state.personaje;
+    if (p.suerteUsada || !state.lastRoll) return;
+    p.suerteUsada = true;
+    this.log("warn", "<b>Suerte</b> usada: tirada repetida.");
+    this.roll();
+  },
+
+  /* ---------- contra / criaturas ---------- */
+  enfrentar(id) {
+    state.tirada.contra = id;
+    const inst = state.escena.criaturas.find(c => c.id === id);
+    if (inst) {
+      const cr = DATA.criaturas[inst.idx];
+      let maxI = 0;
+      cr.s.forEach((v, i) => { if (v > cr.s[maxI]) maxI = i; });
+      state.tirada.contraStat = maxI;
+    }
+    state.tirada.sel = {};
+    this.save(); this.render();
+    document.getElementById("in-accion").focus();
+  },
+  cancelContra() { state.tirada.contra = null; this.save(); this.render(); },
+  setContraStat(i) { state.tirada.contraStat = i; this.save(); this.render(); },
+
+  /* ---------- escena ---------- */
+  setRegion(i) { state.escena.region = +i; this.save(); this.renderRegion(); },
+  addLugar() {
+    const i = +document.getElementById("sel-lugar").value;
+    if (!state.escena.lugares.includes(i)) {
+      state.escena.lugares.push(i);
+      this.log("info", `Lugar añadido: <b>${esc(DATA.lugares[i].n)}</b>`);
+    }
+    this.save(); this.render();
+  },
+  removeLugar(i) { state.escena.lugares.splice(i, 1); this.save(); this.render(); },
+
+  addCriatura() {
+    const i = +document.getElementById("sel-criatura").value;
+    state.escena.criaturas.push({ id: state.uid++, idx: i });
+    this.log("warn", `Criatura en escena: <b>${esc(DATA.criaturas[i].n)}</b>`);
+    this.save(); this.render();
+  },
+  removeCriatura(id) {
+    state.escena.criaturas = state.escena.criaturas.filter(c => c.id !== id);
+    if (state.tirada.contra === id) state.tirada.contra = null;
+    this.save(); this.render();
+  },
+
+  addAmenaza() {
+    const i = +document.getElementById("sel-amenaza").value;
+    if (state.escena.amenazas.some(a => a.idx === i)) return;
+    state.escena.amenazas.push({ idx: i, count: 0, done: false });
+    this.log("warn", `Amenaza activada: <b>${esc(DATA.amenazas[i].n)}</b> (0/${DATA.amenazas[i].max})`);
+    this.save(); this.render();
+  },
+  amenazaStep(id, delta) {
+    const a = state.escena.amenazas.find(x => x.idx === id);
+    if (!a) return;
+    const def = DATA.amenazas[a.idx];
+    const prev = a.count;
+    a.count = Math.max(0, Math.min(def.max, a.count + delta));
+    if (a.count === def.max && prev < def.max) {
+      a.done = true;
+      this.log("ko", `¡<b>${esc(def.n)}</b> ha estallado! (${def.max}/${def.max}) ${esc(def.f)}`);
+    } else if (a.done && a.count < def.max) {
+      a.done = false;
+      this.log("info", `${esc(def.n)} reculó a ${a.count}/${def.max}.`);
+    } else if (delta > 0) {
+      this.log("warn", `${esc(def.n)} avanza a <b>${a.count}/${def.max}</b>.`);
+    }
+    this.save(); this.render();
+  },
+  removeAmenaza(id) { state.escena.amenazas = state.escena.amenazas.filter(a => a.idx !== id); this.save(); this.render(); },
+
+  /* ---------- objetos ---------- */
+  addObjeto() {
+    const sel = document.getElementById("sel-objeto");
+    if (!sel) return;
+    const i = +sel.value;
+    state.personaje.objetos.push(i);
+    this.log("info", `Objeto obtenido: <b>${esc(DATA.objetos[i].n)}</b>`);
+    this.save(); this.render();
+  },
+  removeObject(i) { state.personaje.objetos.splice(i, 1); this.save(); this.render(); },
+
+  /* ---------- registro ---------- */
+  log(cls, html) {
+    state.log.unshift({ cls, html, t: now() });
+    if (state.log.length > 120) state.log.pop();
+    this.save();
+    this.renderLog();
+  },
+
+  /* ============================================================
+       RENDER
+       ============================================================ */
+  render() {
+    document.getElementById("vista-crear").classList.toggle("active", state.vista === "crear");
+    document.getElementById("vista-jugar").classList.toggle("active", state.vista === "jugar");
+    document.getElementById("btn-edit").style.display = state.vista === "jugar" ? "" : "none";
+    const p = state.personaje;
+    document.getElementById("who").textContent = p.nombre ? p.nombre + (this.getArquetipo() ? " · " + this.getArquetipo().n : "") : "";
+
+    if (state.vista === "crear") this.renderCrear();
+    else this.renderJugar();
+  },
+
+  renderCrear() {
+    const inNombre = document.getElementById("in-nombre");
+    if (document.activeElement !== inNombre) inNombre.value = state.personaje.nombre;
+
+    const pre = document.getElementById("presets");
+    if (pre && !pre.dataset.built) {
+      pre.dataset.built = "1";
+      pre.innerHTML = PRESETS.map((c, i) => {
+        const sub = `${DATA.arquetipos[c.arquetipo].n} · ${DATA.razas[c.raza].n} · ${DATA.profesiones[c.profesion].n}`;
+        return `<button class="btn sm" title="${esc(sub)}" onclick="App.applyPreset(${i})">${esc(c.nombre)}<small>${esc(sub)}</small></button>`;
+      }).join("") +
+      `<button class="btn sm rand" onclick="App.randomChar()">Aleatorio<small>cartas al azar</small></button>`;
+    }
+
+    document.getElementById("tabs").innerHTML = TABS.map(t => {
+      let cnt = "";
+      if (t.id === "rasgo") cnt = ` <span class="cnt">(${state.personaje.rasgos.length}/${t.max})</span>`;
+      return `<button class="tab ${state.tab === t.id ? "active" : ""}" onclick="App.setTab('${t.id}')">${t.label}${cnt}</button>`;
+    }).join("");
+
+    const src = DATA[TAB_SOURCE[state.tab]];
+    const maxSel = TABS.find(t => t.id === state.tab).max;
+    document.getElementById("picker").innerHTML = src.map((c, i) => {
+      const sel = this.selectedFor(state.tab, i);
+      const badge = c.v > 0 ? `<span class="badge">+${c.v}</span>` :
+                    (state.tab === "arquetipo" ? `<span class="badge wrap">${c.s.map((v, j) => `${STAT_KEYS[j]} ${fmtStat(v)}`).join(" ")}</span>` :
+                     (c.max ? `<span class="badge warn">hasta ${c.max}</span>` : ""));
+      return `<button class="pcard ${sel ? "sel" : ""}" onclick="App.pick('${state.tab}', ${i})">
+        <span class="n"><span>${esc(c.n)}</span>${badge}</span>
+        <span class="d">${esc(c.d || c.c || "")}</span>
+      </button>`;
+    }).join("");
+
+    this.renderReqs();
+    const p = state.personaje;
+    const ready = p.arquetipo != null && p.raza != null && p.profesion != null && p.rasgos.length > 0 && p.ambicion != null;
+    document.getElementById("btn-start").disabled = !ready;
+    document.getElementById("start-hint").textContent = ready ? "" : "Completa los tipos marcados con ✗";
+
+    this.renderPreview();
+  },
+
+  renderPreview() {
+    const p = state.personaje;
+    const arq = this.getArquetipo();
+    const pick = (id) => {
+      const map = {raza:"razas", profesion:"profesiones", trasfondo:"trasfondos", ambicion:"ambiciones"};
+      const key = id === "profesion" ? "profesion" : id;
+      const idx = p[key === "profesion" ? "profesion" : key];
+      if (idx == null) return `<div class="muted">— sin ${DISPLAY[id] || id} —</div>`;
+      const item = DATA[map[id]][idx];
+      return `<div style="margin-bottom:8px"><b>${esc(item.n)}</b><div class="muted">${esc(item.d)}</div></div>`;
+    };
+    const stats = arq
+      ? `<div class="stats-preview">${arq.s.map((v, i) => `
+          <div class="stat-cell"><div class="k">${STAT_KEYS[i]}</div>
+          <div class="v ${v > 0 ? "pos" : v < 0 ? "neg" : ""}">${fmtStat(v)}</div></div>`).join("")}</div>
+         <div class="muted" style="margin-bottom:10px">${esc(arq.c)}</div>`
+      : `<div class="muted" style="margin-bottom:10px">Elige un arquetipo para ver sus estadísticas.</div>`;
+
+    const rasgos = p.rasgos.length
+      ? p.rasgos.map(i => `<div style="margin-bottom:6px"><b>${esc(DATA.rasgos[i].n)}</b>${DATA.rasgos[i].v ? ` <span class="badge">+${DATA.rasgos[i].v}</span>` : ""}<div class="muted">${esc(DATA.rasgos[i].d)}</div></div>`).join("")
+      : `<div class="muted">— sin rasgos —</div>`;
+
+    document.getElementById("preview").innerHTML = `
+      <input class="nombre" name="nombre-preview" aria-label="Nombre" style="width:100%; border:1px solid var(--border); border-radius:8px; padding:8px 10px; font-weight:700; margin-bottom:10px"
+        value="${esc(p.nombre)}" placeholder="Nombre" oninput="App.setNombre(this.value); document.getElementById('in-nombre').value=this.value">
+      ${stats}
+      <h3>Raza</h3>${pick("raza")}
+      <h3>Profesión</h3>${pick("profesion")}
+      <h3>Rasgos</h3>${rasgos}
+      <h3>Trasfondo</h3>${pick("trasfondo")}
+      <h3>Ambición</h3>${pick("ambicion")}`;
+  },
+
+  renderJugar() {
+    this.renderFicha();
+    this.renderTirada();
+    this.renderEscena();
+    this.renderLog();
+    document.getElementById("deckinfo").textContent =
+      `Baraja cargada: ${deckCount()} cartas · el progreso se guarda automáticamente en este navegador`;
+  },
+
+  renderFicha() {
+    const p = state.personaje;
+    const arq = this.getArquetipo();
+    if (!arq) return;
+    const cardLine = (label, item) => item ? `
+      <div style="margin-bottom:7px"><span class="badge" style="color:var(--text-3)">${label}</span>
+      <b>${esc(item.n)}</b><div class="muted">${esc(item.d)}</div></div>` : "";
+
+    const rasgos = p.rasgos.map(i => `
+      <div style="margin-bottom:7px"><span class="badge" style="color:var(--text-3)">Rasgo</span>
+      <b>${esc(DATA.rasgos[i].n)}</b>${DATA.rasgos[i].v ? ` <span class="badge">+${DATA.rasgos[i].v}</span>` : ""}
+      ${DATA.rasgos[i].esp === "suerte" ? (p.suerteUsada ? `<span class="tag bad" style="font-size:11px">usada</span>` : `<span class="tag ok" style="font-size:11px">disponible</span>`) : ""}
+      <div class="muted">${esc(DATA.rasgos[i].d)}</div></div>`).join("");
+
+    const objs = p.objetos.map((idx, i) => `
+      <span class="chip obj">${esc(DATA.objetos[idx].n)}${DATA.objetos[idx].v ? ` <b style="color:var(--accent)">+${DATA.objetos[idx].v}</b>` : ""}
+      <button class="x" onclick="App.removeObject(${i})" title="Quitar">×</button></span>`).join("");
+
+    document.getElementById("ficha").innerHTML = `
+      <div class="row" style="justify-content:space-between; margin-bottom:6px">
+        <div><b style="font-size:16px">${esc(p.nombre || "Sin nombre")}</b>
+        <span class="muted"> · ${esc(arq.n)} — ${esc(arq.c)}</span></div>
+      </div>
+      <div class="stats-preview">${arq.s.map((v, i) => `
+        <div class="stat-cell"><div class="k">${STAT_KEYS[i]}</div>
+        <div class="v ${v > 0 ? "pos" : v < 0 ? "neg" : ""}">${fmtStat(v)}</div></div>`).join("")}</div>
+      ${cardLine("Raza", DATA.razas[p.raza])}
+      ${cardLine("Profesión", DATA.profesiones[p.profesion])}
+      ${rasgos}
+      ${cardLine("Trasfondo", DATA.trasfondos[p.trasfondo])}
+      ${cardLine("Ambición", DATA.ambiciones[p.ambicion])}
+      <h3 style="margin-top:12px">Objetos</h3>
+      <div class="row">
+        <div class="chips">${objs || `<span class="muted">Ninguno</span>`}</div>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <select id="sel-objeto" style="flex:1; min-width:170px; border:1px solid var(--border); border-radius:8px; padding:6px 8px; background:var(--surface)">
+          ${DATA.objetos.map((o, i) => `<option value="${i}">${esc(o.n)}</option>`).join("")}
+        </select>
+        <button class="btn sm" onclick="App.addObjeto()">Añadir objeto</button>
+      </div>`;
+  },
+
+  renderTirada() {
+    const arq = this.getArquetipo();
+    if (!arq) return;
+    const t = state.tirada;
+
+    document.getElementById("statbtns").innerHTML = arq.s.map((v, i) => `
+      <button class="statbtn ${t.stat === i ? "sel" : ""}" onclick="App.setStat(${i})">
+        <span class="k">${STAT_KEYS[i]}</span><span class="b">${fmtStat(v)}</span>
+      </button>`).join("");
+
+    this.renderBonus();
+
+    const dif = document.getElementById("in-dif");
+    if (document.activeElement !== dif) dif.value = t.dif;
+
+    /* caja de confrontación */
+    const box = document.getElementById("contra-box");
+    if (t.contra != null) {
+      const inst = state.escena.criaturas.find(c => c.id === t.contra);
+      if (inst) {
+        const cr = DATA.criaturas[inst.idx];
+        box.innerHTML = `
+          <div class="contra">
+            <b>Contra: ${esc(cr.n)}</b>
+            <label for="sel-contra-stat" style="font-size:12px">Stat de la criatura:</label>
+            <select id="sel-contra-stat" name="contra-stat" onchange="App.setContraStat(+this.value)">
+              ${cr.s.map((v, i) => `<option value="${i}" ${t.contraStat === i ? "selected" : ""}>${STAT_KEYS[i]} ${fmtStat(v)}</option>`).join("")}
+            </select>
+            <button class="btn sm" onclick="App.cancelContra()">Cancelar</button>
+          </div>`;
+        document.getElementById("in-dif").parentElement.style.opacity = 0.4;
+        document.getElementById("in-dif").disabled = true;
+      }
+    } else {
+      box.innerHTML = "";
+      document.getElementById("in-dif").disabled = false;
+      document.getElementById("in-dif").parentElement.style.opacity = 1;
+    }
+  },
+
+  renderBonus() {
+    const cards = this.bonusCards();
+    const box = document.getElementById("bonuslist");
+    if (!cards.length) {
+      box.innerHTML = `<div class="muted">Tu personaje no tiene cartas con bonificador numérico todavía.</div>`;
+      return;
+    }
+    box.innerHTML = cards.map(c => `
+      <label class="bonusrow">
+        <input type="checkbox" name="bonus-${c.key}" aria-label="${esc(c.n)}" ${state.tirada.sel[c.key] ? "checked" : ""} onchange="App.toggleBonus('${c.key}')">
+        <span><b>${esc(c.n)}</b><span class="bd">${esc(c.d)}</span></span>
+        <span class="bv">+${c.v}</span>
+      </label>`).join("");
+  },
+
+  renderRegion() {
+    const r = DATA.regiones[state.escena.region];
+    document.getElementById("region-desc").textContent = r ? r.d : "";
+    const sel = document.getElementById("sel-region");
+    if (sel && !sel.options.length) {
+      sel.innerHTML = DATA.regiones.map((x, i) => `<option value="${i}">${esc(x.n)}</option>`).join("");
+    }
+    if (sel) sel.value = state.escena.region;
+  },
+
+  renderEscena() {
+    this.renderRegion();
+
+    const selL = document.getElementById("sel-lugar");
+    selL.innerHTML = DATA.lugares.map((x, i) => `<option value="${i}">${esc(x.n)}</option>`).join("");
+    document.getElementById("lugares").innerHTML = state.escena.lugares.map((idx, i) =>
+      `<span class="chip">${esc(DATA.lugares[idx].n)}<button class="x" onclick="App.removeLugar(${i})">×</button></span>`
+    ).join("") || `<span class="muted">Ningún lugar todavía</span>`;
+
+    const selC = document.getElementById("sel-criatura");
+    selC.innerHTML = DATA.criaturas.map((x, i) => `<option value="${i}">${esc(x.n)}</option>`).join("");
+    document.getElementById("criaturas").innerHTML = state.escena.criaturas.map(inst => {
+      const cr = DATA.criaturas[inst.idx];
+      const active = state.tirada.contra === inst.id;
+      return `<div class="creature" style="${active ? "border-color:var(--accent); background:var(--accent-soft)" : ""}">
+        <div class="cn"><span>${esc(cr.n)}</span>
+          <span class="row">
+            <button class="btn sm ${active ? "primary" : ""}" onclick="App.enfrentar(${inst.id})">${active ? "Enfrentando" : "Enfrentar"}</button>
+            <button class="btn sm danger" onclick="App.removeCriatura(${inst.id})">×</button>
+          </span></div>
+        <div class="cstats">${cr.s.map((v, i) => `<b>${STAT_KEYS[i]} ${fmtStat(v)}</b>`).join(" · ")}</div>
+        <div class="cquote">“${esc(cr.f)}”</div>
+        <div class="muted">${esc(cr.a)}</div>
+      </div>`;
+    }).join("") || `<div class="muted">Ninguna criatura en escena</div>`;
+
+    const selA = document.getElementById("sel-amenaza");
+    selA.innerHTML = DATA.amenazas.map((x, i) => `<option value="${i}">${esc(x.n)} (${x.max})</option>`).join("");
+    document.getElementById("amenazas").innerHTML = state.escena.amenazas.map(a => {
+      const def = DATA.amenazas[a.idx];
+      const pct = Math.round((a.count / def.max) * 100);
+      return `<div class="threat ${a.done ? "done" : ""}">
+        <div class="tn"><span>${esc(def.n)}</span>
+          <button class="btn sm danger" onclick="App.removeAmenaza(${a.idx})">×</button></div>
+        <div class="muted">“${esc(def.f)}”</div>
+        <div class="bar"><i style="width:${pct}%"></i></div>
+        <div class="tctl">
+          <button class="btn sm" onclick="App.amenazaStep(${a.idx}, -1)">−1</button>
+          <span class="cnt">${a.count}/${def.max}</span>
+          <button class="btn sm" onclick="App.amenazaStep(${a.idx}, 1)">+1</button>
+          ${a.done ? `<span class="tag bad">¡Estallada!</span>` : ""}
+        </div>
+      </div>`;
+    }).join("") || `<div class="muted">Sin amenazas activas</div>`;
+  },
+
+  renderLog() {
+    document.getElementById("log").innerHTML = state.log.map(e =>
+      `<div class="logitem ${e.cls}"><span class="t">${e.t}</span>${e.html}</div>`
+    ).join("") || `<div class="muted">Sin actividad todavía</div>`;
+  },
+
+  /* ---------- init ---------- */
+  init() {
+    this.load();
+    if (!state.personaje) state.personaje = { nombre:"", arquetipo:null, raza:null, profesion:null, rasgos:[], trasfondo:null, ambicion:null, objetos:[], suerteUsada:false };
+    this.render();
+    if (deckCount() !== 192) console.warn("Baraja incompleta:", deckCount(), "cartas (se esperaban 192)");
+  }
+};
+
+App.init();
+</script>
+</body>
+</html>
